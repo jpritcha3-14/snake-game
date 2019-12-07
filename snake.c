@@ -22,6 +22,7 @@ typedef struct wloc wloc;
 
 struct node {
     struct node* next;
+    struct node* prev;
     loc* position;
 };
 
@@ -67,12 +68,15 @@ bool in_bounds(loc l, wloc w) {
 }
 
 void play_game(wloc pa) {
+    int prevrow;
+    int prevcol;
     char head = '>';
     char ch = 'd';
     char x;
     char nxt;
     char body;
     struct linked_list* snake = malloc(sizeof(struct linked_list));
+    struct node* tempnodeptr;
     snake->head = malloc(sizeof(struct node));
     snake->head->position = malloc(sizeof(loc));
     snake->head->position->row = pa.y + 1;
@@ -89,6 +93,10 @@ void play_game(wloc pa) {
     attron(A_BOLD);
     move(snake->head->position->row, snake->head->position->col);
     mvaddch(snake->head->position->row, snake->head->position->col, head);
+    //~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    mvaddch(snake->head->position->row+6, snake->head->position->col+6, 'a');
+    mvaddch(snake->head->position->row+10, snake->head->position->col+10, 'a');
+    //~~~~~~~~~~~~~~~~~~~~~~~~~~~
     refresh();
     nxt = getch();
     timeout(0);
@@ -119,13 +127,39 @@ void play_game(wloc pa) {
             head = 'v';        
         }
 
-        // place body where head was
+
+        if (!snake->head->next) {
+            prevrow = snake->head->position->row;
+            prevcol = snake->head->position->col;
+        } else if (snake->length == 2) {
+            prevrow = snake->tail->position->row;
+            prevcol = snake->tail->position->col;
+            mvaddch(snake->head->position->row, snake->head->position->col,
+                    dir == North || dir == South ? ':' : '-');
+            snake->tail->position->row = snake->head->position->row;
+            snake->tail->position->col = snake->head->position->col;
+        } else {
+            prevrow = snake->tail->position->row;
+            prevcol = snake->tail->position->col;
+            mvaddch(snake->head->position->row, snake->head->position->col, 
+                    dir == North || dir == South ? ':' : '-');
+            snake->tail->position->row = snake->head->position->row;
+            snake->tail->position->col = snake->head->position->col;
+            snake->tail->next = snake->head->next;
+            snake->head->next->prev = snake->tail;
+            tempnodeptr = snake->tail->prev; 
+            snake->tail->prev = snake->head;
+            snake->tail = tempnodeptr; 
+            snake->head->next = snake->head->next->prev; 
+        }
+
+        // draw body where head was
         mvaddch(snake->head->position->row, 
                 snake->head->position->col, 
                 dir == North || dir == South ? ':' : '-');
 
-        refresh();
 
+        // move head to new position
         if (dir == West) {
             snake->head->position->col -= 2;
         } else if (dir == North) {
@@ -136,17 +170,37 @@ void play_game(wloc pa) {
             snake->head->position->row += 1;
         }
 
-        
+        refresh();        
         // get where head will be moved
         mvinchnstr(snake->head->position->row, snake->head->position->col, next_space, 1);
+
         // cast to unsigned char and strip off chtype formatting to compare characters
         if ((unsigned char)next_space[0] == ('-' & A_CHARTEXT) 
             || (unsigned char)next_space[0] == (':' & A_CHARTEXT) 
             || !in_bounds(*snake->head->position, pa)) {
             mvaddch(snake->head->position->row, snake->head->position->col, head);
+            mvaddch(prevrow, prevcol, ' ');
             refresh();
             free(next_space);
             return;
+        }
+        if ((unsigned char)next_space[0] == ('a' & A_CHARTEXT)) {
+            if (snake->length == 1) {
+                mvaddch(prevrow, prevcol, (dir == North || dir == South) ? ':' : '-');
+                snake->tail = malloc(sizeof(struct node));
+                snake->tail->prev = snake->head;
+                snake->head->next = snake->tail;
+            } else {
+                snake->tail->next = malloc(sizeof(struct node));
+                snake->tail->next->prev = snake->tail;
+                snake->tail = snake->tail->next;
+            }
+            snake->tail->position = malloc(sizeof(loc));
+            snake->tail->position->row = prevrow;
+            snake->tail->position->col = prevcol;  
+            snake->length += 1;
+        } else {
+            mvaddch(prevrow, prevcol, ' ');
         }
 
         // place head
