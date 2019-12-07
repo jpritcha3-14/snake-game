@@ -108,7 +108,8 @@ void play_game(wloc pa) {
     char x;
     char nxt;
     char body;
-    struct node* tempnodeptr;
+    struct node* tempfrontbody;
+    struct node* temppenultbody;
 
 
     int totalpositions = ((pa.cols - 3) / 2) * (pa.rows - 2);
@@ -179,22 +180,27 @@ void play_game(wloc pa) {
             snake->tail->position->row = snake->head->position->row;
             snake->tail->position->col = snake->head->position->col;
         } else {
-            // this line can seg fault?
             previous.row = snake->tail->position->row;
-            //
             previous.col = snake->tail->position->col;
             mvaddch(snake->head->position->row, snake->head->position->col, 
                     dir == North || dir == South ? ':' : '-');
             snake->tail->position->row = snake->head->position->row;
             snake->tail->position->col = snake->head->position->col;
-            snake->tail->next = snake->head->next;
-            // this line causing seg fault
-            snake->head->next->prev = snake->tail;
-            //
-            tempnodeptr = snake->tail->prev; 
+
+            snake->tail = snake->tail->prev;
+            /*
+            tempfrontbody = snake->head->next;
+            temppenultbody = snake->tail->prev;
+
             snake->tail->prev = snake->head;
-            snake->tail = tempnodeptr; 
-            snake->head->next = snake->head->next->prev; 
+            snake->tail->next = tempfrontbody;
+            //this is seg faulting
+            tempfrontbody->prev = snake->tail;
+            //
+            snake->head->next = snake->tail;
+            snake->tail = temppenultbody;
+            snake->tail->next = NULL;
+            */
         }
 
         // draw new body segment where head was
@@ -229,11 +235,14 @@ void play_game(wloc pa) {
             if (snake->length == 1) {
                 mvaddch(previous.row, previous.col, (dir == North || dir == South) ? ':' : '-');
                 snake->tail = malloc(sizeof(struct node));
-                snake->tail->prev = snake->head;
-                snake->head->next = snake->tail;
+                snake->tail->next = snake->tail;
+                snake->tail->prev = snake->tail;
             } else {
+                tempfrontbody = snake->tail->next;
                 snake->tail->next = malloc(sizeof(struct node));
                 snake->tail->next->prev = snake->tail;
+                snake->tail->next->next = tempfrontbody;
+                tempfrontbody->prev = snake->tail->next;
                 snake->tail = snake->tail->next;
             }
             snake->tail->position = malloc(sizeof(loc));
