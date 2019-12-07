@@ -19,6 +19,17 @@ struct wloc {
 };
 
 typedef struct wloc wloc;
+
+struct node {
+    struct node* next;
+    loc* position;
+};
+
+struct linked_list {
+    struct node* head;
+    struct node* tail;  
+    int length;
+};
     
 wloc get_play_area(WINDOW* w) {
     wloc play_area; 
@@ -48,7 +59,6 @@ void draw_border(wloc pa, char c) {
     }
     attroff(A_BOLD);
     refresh();
-    getch();
 }
 
 bool in_bounds(loc l, wloc w) {
@@ -57,27 +67,32 @@ bool in_bounds(loc l, wloc w) {
 }
 
 void play_game(wloc pa) {
-    char ch = 'd';
-    char x = 'd';
-    char nxt = 'd';
     char head = '>';
-    char body = '*';
-    int slen = 10;
+    char ch = 'd';
+    char x;
+    char nxt;
+    char body;
+    struct linked_list* snake = malloc(sizeof(struct linked_list));
+    snake->head = malloc(sizeof(struct node));
+    snake->head->position = malloc(sizeof(loc));
+    snake->head->position->row = pa.y + 1;
+    snake->head->position->col = pa.x + 2;
+    snake->length = 1;
 
-    loc curloc;
-    curloc.row = pa.y + 1;
-    curloc.col = pa.x + 2;
     enum direction dir = East;
     struct timespec cur;
     cur.tv_sec = 0;
     cur.tv_nsec = 100000000;
-    timeout(0);
     chtype *next_space = malloc(2 * sizeof(chtype));
 
-    move(curloc.row, curloc.col);
     attron(COLOR_PAIR(1));
     attron(A_BOLD);
-
+    move(snake->head->position->row, snake->head->position->col);
+    mvaddch(snake->head->position->row, snake->head->position->col, head);
+    refresh();
+    nxt = getch();
+    timeout(0);
+    
     for(;;) {
         // Read everything out of the character buffer, set x to last character;
         do {
@@ -105,31 +120,37 @@ void play_game(wloc pa) {
         }
 
         // place body where head was
-        mvaddch(curloc.row, curloc.col, body);
+        mvaddch(snake->head->position->row, 
+                snake->head->position->col, 
+                dir == North || dir == South ? ':' : '-');
+
         refresh();
 
         if (dir == West) {
-            curloc.col -= 2;
+            snake->head->position->col -= 2;
         } else if (dir == North) {
-            curloc.row -= 1;
+            snake->head->position->row -= 1;
         } else if (dir == East) {
-            curloc.col += 2;
+            snake->head->position->col += 2;
         } else {
-            curloc.row += 1;
+            snake->head->position->row += 1;
         }
+
         
         // get where head will be moved
-        mvinchnstr(curloc.row, curloc.col, next_space, 1);
+        mvinchnstr(snake->head->position->row, snake->head->position->col, next_space, 1);
         // cast to unsigned char and strip off chtype formatting to compare characters
-        if ((unsigned char)next_space[0] == ('*' & A_CHARTEXT) || !in_bounds(curloc, pa)) {
-            mvaddch(curloc.row, curloc.col, head);
+        if ((unsigned char)next_space[0] == ('-' & A_CHARTEXT) 
+            || (unsigned char)next_space[0] == (':' & A_CHARTEXT) 
+            || !in_bounds(*snake->head->position, pa)) {
+            mvaddch(snake->head->position->row, snake->head->position->col, head);
             refresh();
             free(next_space);
             return;
         }
 
         // place head
-        mvaddch(curloc.row, curloc.col, head);
+        mvaddch(snake->head->position->row, snake->head->position->col, head);
         refresh();
         nanosleep(&cur, NULL);
     }
@@ -140,7 +161,6 @@ int main() {
     cbreak();
     noecho();
     start_color();
-    init_pair(1, COLOR_BLUE, COLOR_RED);
     keypad(stdscr, TRUE);
     curs_set(0);
     init_pair(1, COLOR_GREEN, COLOR_BLACK);
@@ -149,6 +169,7 @@ int main() {
     wloc pa = get_play_area(stdscr);
     draw_border(pa, '!');
     play_game(pa);
+
     endwin();
     return 0;
 }
