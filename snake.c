@@ -100,8 +100,9 @@ bool in_bounds(loc l, wloc w) {
             && l.col > w.x && l.col < w.x + w.cols + 1);
 }
 
-void play_game(wloc pa) {
+void play_game(wloc pa, WINDOW* dummy) {
 
+    keypad(dummy, TRUE);
     loc previous;
     char head = '<';
     char ch = 'd';
@@ -110,6 +111,7 @@ void play_game(wloc pa) {
     char nextkey = ERR;
     char nxt;
     char body;
+    char scorebuffer[6];
     struct node* tempfrontbody;
     struct node* temppenultbody;
 
@@ -136,11 +138,14 @@ void play_game(wloc pa) {
     cur.tv_nsec = 100000000;
     chtype *next_space = malloc(2 * sizeof(chtype));
 
+    attron(COLOR_PAIR(2));
+    mvaddch(pa.y-1, pa.x+7, '0');
     attron(COLOR_PAIR(1));
+    mvaddstr(pa.y-1, pa.x, "SCORE:");
     mvaddch(snake->head->position->row, snake->head->position->col, head);
     refresh();
-    nxt = getch();
-    timeout(0);
+    nxt = wgetch(dummy);
+    wtimeout(dummy, 0);
     
     for(;;) {
         // Read everything out of the character buffer, set x to last character;
@@ -149,12 +154,12 @@ void play_game(wloc pa) {
         if (nextkey != ERR) {
             ch = nextkey;
             nextkey = ERR;
-            while (getch() != ERR); // clear buffer
+            while (wgetch(dummy) != ERR); // clear buffer
         } else {
             do {
                 prevkey = key;
                 key = nxt;
-                nxt = getch();
+                nxt = wgetch(dummy);
             } while (nxt != ERR);
     
             if (key != ERR && prevkey != ERR && key != prevkey
@@ -243,11 +248,13 @@ void play_game(wloc pa) {
             snake->tail->position->row = previous.row;
             snake->tail->position->col = previous.col;  
             snake->length += 1;
+            sprintf(scorebuffer, "%d", snake->length - 1);
 
             updatevalidpos(validapplepositions, pa, snake->head->position, NULL);
             apple = placeapple(validapplepositions, pa);
             attron(COLOR_PAIR(2));
             mvaddch(apple.row, apple.col, 'a');
+            mvaddstr(pa.y - 1, pa.x + 7, scorebuffer);
             attron(COLOR_PAIR(1));
         } else {
             mvaddch(previous.row, previous.col, ' ');
@@ -277,14 +284,17 @@ int main() {
     cbreak();
     noecho();
     start_color();
-    keypad(stdscr, TRUE);
+    WINDOW* dummy = malloc(sizeof(WINDOW));
+    dummy = newwin(0, 0, 1000, 1000);
+    nodelay(dummy, true);
+    keypad(dummy, true);
     curs_set(0);
     init_pair(1, COLOR_GREEN, COLOR_BLACK);
     init_pair(2, COLOR_RED, COLOR_BLACK);
 
     wloc pa = get_play_area(stdscr);
     draw_border(pa, '!');
-    play_game(pa);
+    play_game(pa, dummy);
 
     endwin();
     return 0;
