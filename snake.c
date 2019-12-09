@@ -103,7 +103,7 @@ bool in_bounds(loc l, wloc w) {
 void play_game(wloc pa) {
 
     loc previous;
-    char head = '>';
+    char head = '<';
     char ch = 'd';
     char x;
     char nxt;
@@ -123,9 +123,6 @@ void play_game(wloc pa) {
     for (int i = 1; i < pa.rows * pa.cols; i++) validapplepositions[i] = true;
 
     loc apple = placeapple(validapplepositions, pa);
-    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    bool isinbounds = in_bounds(apple, pa);
-    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     attron(COLOR_PAIR(2));
     attron(A_BOLD);
     mvaddch(apple.row, apple.col, 'a');
@@ -157,16 +154,16 @@ void play_game(wloc pa) {
         // Update head direction and representation 
         if (ch == 'a' && dir != East) {
             dir = West;
-            head = '<';        
+            head = '>';        
         } else if (ch == 'w' && dir != South) {
             dir = North;
-            head = '^';        
+            head = 'v';        
         } else if (ch == 'd' && dir != West) {
             dir = East;
-            head = '>';        
+            head = '<';        
         } else if (ch == 's' && dir != North) {
             dir = South;
-            head = 'v';        
+            head = '^';        
         }
 
         // update the body linked list
@@ -189,19 +186,6 @@ void play_game(wloc pa) {
             snake->tail->position->col = snake->head->position->col;
 
             snake->tail = snake->tail->prev;
-            /*
-            tempfrontbody = snake->head->next;
-            temppenultbody = snake->tail->prev;
-
-            snake->tail->prev = snake->head;
-            snake->tail->next = tempfrontbody;
-            //this is seg faulting
-            tempfrontbody->prev = snake->tail;
-            //
-            snake->head->next = snake->tail;
-            snake->tail = temppenultbody;
-            snake->tail->next = NULL;
-            */
         }
 
         // draw new body segment where head was
@@ -223,15 +207,7 @@ void play_game(wloc pa) {
         // get where head will be moved
         mvinchnstr(snake->head->position->row, snake->head->position->col, next_space, 1);
 
-        // cast to unsigned char and strip off chtype formatting to compare characters
-        if ((unsigned char)next_space[0] == ('-' & A_CHARTEXT) 
-            || (unsigned char)next_space[0] == (':' & A_CHARTEXT) 
-            || !in_bounds(*snake->head->position, pa)) {
-            mvaddch(snake->head->position->row, snake->head->position->col, head);
-            mvaddch(previous.row, previous.col, ' ');
-            refresh();
-            return;
-        }
+
         if ((unsigned char)next_space[0] == ('a' & A_CHARTEXT)) {
             if (snake->length == 1) {
                 mvaddch(previous.row, previous.col, (dir == North || dir == South) ? ':' : '-');
@@ -258,7 +234,18 @@ void play_game(wloc pa) {
             attron(COLOR_PAIR(1));
         } else {
             mvaddch(previous.row, previous.col, ' ');
+            mvinchnstr(snake->head->position->row, snake->head->position->col, next_space, 1);
             updatevalidpos(validapplepositions, pa, snake->head->position, &previous);
+        }
+
+        // cast to unsigned char and strip off chtype formatting to compare characters
+        if ((unsigned char)next_space[0] == ('-' & A_CHARTEXT) 
+            || (unsigned char)next_space[0] == (':' & A_CHARTEXT) 
+            || !in_bounds(*snake->head->position, pa)) {
+            mvaddch(previous.row, previous.col, ' ');
+            mvaddch(snake->head->position->row, snake->head->position->col, head);
+            refresh();
+            return;
         }
 
         // place head
