@@ -195,8 +195,9 @@ void play_game(wloc pa, WINDOW* dummy) {
         } else if (snake->length == 2) {
             previous.row = snake->tail->position->row;
             previous.col = snake->tail->position->col;
-            mvaddch(snake->head->position->row, snake->head->position->col,
-                    dir == North || dir == South ? ':' : '-');
+            //mvaddch(snake->head->position->row, snake->head->position->col,
+                    //dir == North || dir == South ? ':' : '-');
+            //refresh();
             snake->tail->position->row = snake->head->position->row;
             snake->tail->position->col = snake->head->position->col;
         } else {
@@ -206,7 +207,6 @@ void play_game(wloc pa, WINDOW* dummy) {
                     dir == North || dir == South ? ':' : '-');
             snake->tail->position->row = snake->head->position->row;
             snake->tail->position->col = snake->head->position->col;
-
             snake->tail = snake->tail->prev;
         }
 
@@ -285,8 +285,7 @@ int main() {
     noecho();
     start_color();
     WINDOW* dummy = malloc(sizeof(WINDOW));
-    dummy = newwin(0, 0, 1000, 1000);
-    nodelay(dummy, true);
+    dummy = newwin(1, 1, 1000, 1000);
     keypad(dummy, true);
     curs_set(0);
     init_pair(1, COLOR_GREEN, COLOR_BLACK);
