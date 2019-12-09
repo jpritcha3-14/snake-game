@@ -105,7 +105,9 @@ void play_game(wloc pa) {
     loc previous;
     char head = '<';
     char ch = 'd';
-    char x;
+    char key;
+    char prevkey;
+    char nextkey = ERR;
     char nxt;
     char body;
     struct node* tempfrontbody;
@@ -142,28 +144,43 @@ void play_game(wloc pa) {
     
     for(;;) {
         // Read everything out of the character buffer, set x to last character;
-        do {
-            x = nxt;
-            nxt = getch();
-        } while (nxt != ERR);
-
-        // Repeat last character if no input, or not wasd
-        ch = (x == ERR 
-          || (x != 'a' && x != 'w' && x != 'd' && x != 's')) ? ch : x;
-
+        prevkey = ERR;
+        key = ERR;
+        if (nextkey != ERR) {
+            ch = nextkey;
+            nextkey = ERR;
+            while (getch() != ERR); // clear buffer
+        } else {
+            do {
+                prevkey = key;
+                key = nxt;
+                nxt = getch();
+            } while (nxt != ERR);
+    
+            if (key != ERR && prevkey != ERR && key != prevkey
+                && (prevkey == 'a' || prevkey == 'w' || prevkey == 'd' || prevkey == 's') 
+                && (key == 'a' || key == 'w' || key == 'd' || key == 's')) {
+                ch = prevkey;
+                nextkey = key; 
+            } else if (key != ERR
+                && (key == 'a' || key == 'w' || key == 'd' || key == 's')) {
+                ch = key;
+            }
+        }
+                
         // Update head direction and representation 
         if (ch == 'a' && dir != East) {
             dir = West;
-            head = '>';        
+            head = '>';
         } else if (ch == 'w' && dir != South) {
             dir = North;
-            head = 'v';        
+            head = 'v';
         } else if (ch == 'd' && dir != West) {
             dir = East;
-            head = '<';        
+            head = '<';
         } else if (ch == 's' && dir != North) {
             dir = South;
-            head = '^';        
+            head = '^';
         }
 
         // update the body linked list
