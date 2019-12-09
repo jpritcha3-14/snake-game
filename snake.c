@@ -16,6 +16,7 @@ struct wloc {
     int x;
     int cols;
     int rows;
+    int usefulcols;
 };
 
 typedef struct wloc wloc;
@@ -33,35 +34,34 @@ struct linked_list {
 };
 
 int toarrayidx(int row, int col, wloc pa) {
-    int cols = ((pa.cols - 3) / 2);
-    int rows = (pa.rows - 2);
-    return row * cols + col; 
+    int translatedcol = (col - pa.x - 2) / 2;
+    int translatedrow = row - pa.y - 1;
+    return translatedrow * ((pa.cols - 1) / 2) + translatedcol; 
 }
 
-loc tolocation(int idx, wloc pa) {
-    int row = idx / pa.cols; 
-    int col = idx % pa.cols;
-    loc translated;
-    translated.row = pa.y + 1 + row;
-    translated.col = pa.x + 2 + (col * 2);
-    return translated;
+loc tolocation(int idx, wloc pa) {    
+    int translatedcol = idx % pa.usefulcols;
+    int translatedrow = idx / pa.usefulcols;
+    loc loconscreen;
+    loconscreen.row = translatedrow + pa.y + 1;
+    loconscreen.col = (translatedcol * 2) + pa.x + 2;
+    return loconscreen;
 }
 
-loc placeapple(const struct node* head, wloc pa) {
-    int applerow;
-    int applecol;
-    do {
-        //applerow = rand # between pa.y  and pa.y + pa.rows + 1 exclusive 
-        applerow = rand() % (pa.rows) + pa.y + 1;
-        //applecol = rand # between pa.x and pa.x + pa.cols + 1 exclusive
-        applecol = rand() % (pa.cols - 1);
-        applecol += applecol % 2 == 0 ? pa.x + 2 : pa.x + 1;
-    } while(head->position->row == applerow && head->position->col == applecol); 
-    
-    loc apple;
-    apple.row = applerow;
-    apple.col = applecol;
-    return apple;
+void updatevalidpos(bool* valid, wloc pa, loc* toremove, loc* toadd) {
+    valid[toarrayidx(toremove->row, toremove->col, pa)] = false;
+    if (toadd) {
+        valid[toarrayidx(toadd->row, toadd->col, pa)] = true;
+    }
+}
+
+loc placeapple(const bool* valid, wloc pa) {
+    int len = pa.rows * pa.usefulcols;
+    int apple = rand() % len;
+    while (!valid[apple]) {
+        apple = (apple + 1) % len; 
+    } 
+    return tolocation(apple, pa);
 }
 
 wloc get_play_area(WINDOW* w) {
@@ -71,7 +71,8 @@ wloc get_play_area(WINDOW* w) {
     play_area.x = (wcols / 4);
     play_area.y = (wrows / 4);
     play_area.cols = (wcols / 2);
-    play_area.cols += (wcols / 2) % 2 ? 0 : 1; // flip back?
+    play_area.cols += (wcols / 2) % 2 ? 0 : 1;
+    play_area.usefulcols = (play_area.cols - 1) / 2; 
     play_area.rows = (wrows / 2);
     return play_area;
 }
@@ -117,7 +118,14 @@ void play_game(wloc pa) {
     snake->head->position->col = pa.x + 2;
     snake->length = 1;
 
-    loc apple = placeapple(snake->head, pa);
+    bool* validapplepositions = malloc(pa.rows * pa.cols * sizeof(bool));
+    validapplepositions[0] = false;
+    for (int i = 1; i < pa.rows * pa.cols; i++) validapplepositions[i] = true;
+
+    loc apple = placeapple(validapplepositions, pa);
+    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    bool isinbounds = in_bounds(apple, pa);
+    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     attron(COLOR_PAIR(2));
     attron(A_BOLD);
     mvaddch(apple.row, apple.col, 'a');
@@ -243,12 +251,14 @@ void play_game(wloc pa) {
             snake->tail->position->col = previous.col;  
             snake->length += 1;
 
-            apple = placeapple(snake->head, pa);
+            updatevalidpos(validapplepositions, pa, snake->head->position, NULL);
+            apple = placeapple(validapplepositions, pa);
             attron(COLOR_PAIR(2));
             mvaddch(apple.row, apple.col, 'a');
             attron(COLOR_PAIR(1));
         } else {
             mvaddch(previous.row, previous.col, ' ');
+            updatevalidpos(validapplepositions, pa, snake->head->position, &previous);
         }
 
         // place head
