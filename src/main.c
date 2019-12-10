@@ -4,6 +4,7 @@
 #include "structs.h"
 #include "helper_functions.h"
 #include "game_loop.h"
+#include "menu.h"
 
 int main() {
     initscr();
@@ -18,9 +19,8 @@ int main() {
     init_pair(2, COLOR_RED, COLOR_BLACK);
 
     wloc pa = get_play_area(stdscr);
-    draw_border(pa, '!');
-    play_game(pa, dummy);
-    
+    while(show_menu(pa, dummy));
+
     endwin();
     return 0;
 }

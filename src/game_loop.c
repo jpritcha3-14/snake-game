@@ -7,6 +7,8 @@
 #include "game_loop.h"
 
 void play_game(wloc pa, WINDOW* dummy) {
+    clear();
+    draw_border(pa, '!');
 
     loc previous;
     char head = '<';
@@ -185,6 +187,8 @@ void play_game(wloc pa, WINDOW* dummy) {
             free(next_space);
             free(validapplepositions);
             freesnake(snake);
+            wtimeout(dummy, -1);
+            attroff(COLOR_PAIR(2));
             return;
         }
 
