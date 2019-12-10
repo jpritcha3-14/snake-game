@@ -33,6 +33,22 @@ struct linked_list {
     int length;
 };
 
+void freesnake(struct linked_list* snake) {
+    if (snake->length > 1) {
+        struct node* cur = snake->tail;
+        for (int i = 0; i < snake->length - 2; i++) {
+            free(cur->position);
+            cur = cur->prev;
+            free(cur->next);
+        }
+        free(cur->position);
+        free(cur);
+    }
+    free(snake->head->position);
+    free(snake->head);
+    free(snake);
+}
+
 int toarrayidx(int row, int col, wloc pa) {
     int translatedcol = (col - pa.x - 2) / 2;
     int translatedrow = row - pa.y - 1;
@@ -195,9 +211,6 @@ void play_game(wloc pa, WINDOW* dummy) {
         } else if (snake->length == 2) {
             previous.row = snake->tail->position->row;
             previous.col = snake->tail->position->col;
-            //mvaddch(snake->head->position->row, snake->head->position->col,
-                    //dir == North || dir == South ? ':' : '-');
-            //refresh();
             snake->tail->position->row = snake->head->position->row;
             snake->tail->position->col = snake->head->position->col;
         } else {
@@ -267,8 +280,12 @@ void play_game(wloc pa, WINDOW* dummy) {
             || (unsigned char)next_space[0] == (':' & A_CHARTEXT) 
             || !in_bounds(*snake->head->position, pa)) {
             mvaddch(previous.row, previous.col, ' ');
-            mvaddch(snake->head->position->row, snake->head->position->col, head);
+            attron(COLOR_PAIR(2));
+            mvaddch(snake->head->position->row, snake->head->position->col, 'x');
             refresh();
+            free(next_space);
+            free(validapplepositions);
+            freesnake(snake);
             return;
         }
 
@@ -281,7 +298,6 @@ void play_game(wloc pa, WINDOW* dummy) {
 
 int main() {
     initscr();
-    cbreak();
     noecho();
     start_color();
     WINDOW* dummy = malloc(sizeof(WINDOW));
@@ -294,7 +310,7 @@ int main() {
     wloc pa = get_play_area(stdscr);
     draw_border(pa, '!');
     play_game(pa, dummy);
-
+    
     endwin();
     return 0;
 }
