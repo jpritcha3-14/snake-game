@@ -1,124 +1,13 @@
-#include <ncurses.h>
-#include <stdlib.h>
 #include <time.h>
+#include <stdlib.h> 
+#include <stdio.h>
 
-enum direction{North, South, East, West};
-
-struct loc {
-    int row;
-    int col;
-};
-
-typedef struct loc loc;
-
-struct wloc {
-    int y;
-    int x;
-    int cols;
-    int rows;
-    int usefulcols;
-};
-
-typedef struct wloc wloc;
-
-struct node {
-    struct node* next;
-    struct node* prev;
-    loc* position;
-};
-
-struct linked_list {
-    struct node* head;
-    struct node* tail;  
-    int length;
-};
-
-void freesnake(struct linked_list* snake) {
-    if (snake->length > 1) {
-        struct node* cur = snake->tail;
-        for (int i = 0; i < snake->length - 2; i++) {
-            free(cur->position);
-            cur = cur->prev;
-            free(cur->next);
-        }
-        free(cur->position);
-        free(cur);
-    }
-    free(snake->head->position);
-    free(snake->head);
-    free(snake);
-}
-
-int toarrayidx(int row, int col, wloc pa) {
-    int translatedcol = (col - pa.x - 2) / 2;
-    int translatedrow = row - pa.y - 1;
-    return translatedrow * ((pa.cols - 1) / 2) + translatedcol; 
-}
-
-loc tolocation(int idx, wloc pa) {    
-    int translatedcol = idx % pa.usefulcols;
-    int translatedrow = idx / pa.usefulcols;
-    loc loconscreen;
-    loconscreen.row = translatedrow + pa.y + 1;
-    loconscreen.col = (translatedcol * 2) + pa.x + 2;
-    return loconscreen;
-}
-
-void updatevalidpos(bool* valid, wloc pa, loc* toremove, loc* toadd) {
-    valid[toarrayidx(toremove->row, toremove->col, pa)] = false;
-    if (toadd) {
-        valid[toarrayidx(toadd->row, toadd->col, pa)] = true;
-    }
-}
-
-loc placeapple(const bool* valid, wloc pa) {
-    int len = pa.rows * pa.usefulcols;
-    int apple = rand() % len;
-    while (!valid[apple]) {
-        apple = (apple + 1) % len; 
-    } 
-    return tolocation(apple, pa);
-}
-
-wloc get_play_area(WINDOW* w) {
-    wloc play_area; 
-    int wrows, wcols;
-    getmaxyx(w, wrows, wcols);
-    play_area.x = (wcols / 4);
-    play_area.y = (wrows / 4);
-    play_area.cols = (wcols / 2);
-    play_area.cols += (wcols / 2) % 2 ? 0 : 1;
-    play_area.usefulcols = (play_area.cols - 1) / 2; 
-    play_area.rows = (wrows / 2);
-    return play_area;
-}
-
-void draw_border(wloc pa, char c) {
-    move(pa.y, pa.x);
-    attron(A_BOLD);
-    for (int i = pa.x; i <= pa.x + pa.cols + 1; i++) {
-        addch(c); 
-    }
-    for (int i = pa.y + 1; i <= pa.y + pa.rows; i++) {
-        mvaddch(i, pa.x, c);
-        mvaddch(i, pa.x + pa.cols + 1, c);
-    }
-    move(pa.y + pa.rows + 1, pa.x);
-    for (int i = pa.x; i <= pa.x + pa.cols + 1; i++) {
-        addch(c); 
-    }
-    attroff(A_BOLD);
-    refresh();
-}
-
-bool in_bounds(loc l, wloc w) {
-    return (l.row > w.y && l.row < w.y + w.rows + 1
-            && l.col > w.x && l.col < w.x + w.cols + 1);
-}
+#include "structs.h"
+#include "helper_functions.h"
+#include "game_loop.h"
 
 void play_game(wloc pa, WINDOW* dummy) {
 
-    keypad(dummy, TRUE);
     loc previous;
     char head = '<';
     char ch = 'd';
@@ -126,11 +15,15 @@ void play_game(wloc pa, WINDOW* dummy) {
     char prevkey;
     char nextkey = ERR;
     char nxt;
-    char body;
     char scorebuffer[6];
     struct node* tempfrontbody;
-    struct node* temppenultbody;
+    enum direction dir = East;
+    struct timespec cur;
+    cur.tv_sec = 0;
+    cur.tv_nsec = 100000000;
+    chtype *next_space = malloc(2 * sizeof(chtype));
 
+    // Initialize snake
     struct linked_list* snake = malloc(sizeof(struct linked_list));
     snake->head = malloc(sizeof(struct node));
     snake->head->position = malloc(sizeof(loc));
@@ -138,39 +31,39 @@ void play_game(wloc pa, WINDOW* dummy) {
     snake->head->position->col = pa.x + 2;
     snake->length = 1;
 
+    // Intialize apple position array and place first apple
     bool* validapplepositions = malloc(pa.rows * pa.cols * sizeof(bool));
     validapplepositions[0] = false;
     for (int i = 1; i < pa.rows * pa.cols; i++) validapplepositions[i] = true;
-
     loc apple = placeapple(validapplepositions, pa);
+
+    // Draw snake, apple, and score
     attron(COLOR_PAIR(2));
     attron(A_BOLD);
     mvaddch(apple.row, apple.col, 'a');
-    attroff(COLOR_PAIR(2));
-
-    enum direction dir = East;
-    struct timespec cur;
-    cur.tv_sec = 0;
-    cur.tv_nsec = 100000000;
-    chtype *next_space = malloc(2 * sizeof(chtype));
-
-    attron(COLOR_PAIR(2));
     mvaddch(pa.y-1, pa.x+7, '0');
     attron(COLOR_PAIR(1));
     mvaddstr(pa.y-1, pa.x, "SCORE:");
     mvaddch(snake->head->position->row, snake->head->position->col, head);
     refresh();
+
+    // Block until first key pressed, then set input to non-blocking
     nxt = wgetch(dummy);
     wtimeout(dummy, 0);
     
     for(;;) {
-        // Read everything out of the character buffer, set x to last character;
+
+        // Read and validate inputs. If 2+ inputs recived at once,
+        // use the second to last in the current iteration, and
+        // the last ('nextkey') in the next iteration. This allows
+        // for fast inputs on tight turns to be processed correctly.
         prevkey = ERR;
         key = ERR;
         if (nextkey != ERR) {
             ch = nextkey;
             nextkey = ERR;
-            while (wgetch(dummy) != ERR); // clear buffer
+            fflush(stdin); // clear buffer 
+            //can also be implemented as: while (wgetch(dummy) != ERR);
         } else {
             do {
                 prevkey = key;
@@ -189,7 +82,7 @@ void play_game(wloc pa, WINDOW* dummy) {
             }
         }
                 
-        // Update head direction and representation 
+        // Update the snake head direction and representation 
         if (ch == 'a' && dir != East) {
             dir = West;
             head = '>';
@@ -204,7 +97,9 @@ void play_game(wloc pa, WINDOW* dummy) {
             head = '^';
         }
 
-        // update the body linked list
+        // Update the body linked list.  The body is represented
+        // as a circular linked list.  As the snake moves, the 
+        // tail moved to the front of the body.
         if (snake->length == 1) {
             previous.row = snake->head->position->row;
             previous.col = snake->head->position->col;
@@ -223,12 +118,12 @@ void play_game(wloc pa, WINDOW* dummy) {
             snake->tail = snake->tail->prev;
         }
 
-        // draw new body segment where head was
+        // Draw a new body segment where head was
         mvaddch(snake->head->position->row, 
                 snake->head->position->col, 
                 dir == North || dir == South ? ':' : '-');
 
-        // move head to new position
+        // Move the head to new position
         if (dir == West) {
             snake->head->position->col -= 2;
         } else if (dir == North) {
@@ -239,10 +134,12 @@ void play_game(wloc pa, WINDOW* dummy) {
             snake->head->position->row += 1;
         }
 
-        // get where head will be moved
+        // Get character present on screen in new head location
         mvinchnstr(snake->head->position->row, snake->head->position->col, next_space, 1);
 
 
+        // Grow snake body, update score, and place a new apple when 
+        // the snake head reaches the apple on screen.
         if ((unsigned char)next_space[0] == ('a' & A_CHARTEXT)) {
             if (snake->length == 1) {
                 mvaddch(previous.row, previous.col, (dir == North || dir == South) ? ':' : '-');
@@ -261,8 +158,8 @@ void play_game(wloc pa, WINDOW* dummy) {
             snake->tail->position->row = previous.row;
             snake->tail->position->col = previous.col;  
             snake->length += 1;
-            sprintf(scorebuffer, "%d", snake->length - 1);
 
+            sprintf(scorebuffer, "%d", snake->length - 1);
             updatevalidpos(validapplepositions, pa, snake->head->position, NULL);
             apple = placeapple(validapplepositions, pa);
             attron(COLOR_PAIR(2));
@@ -270,12 +167,14 @@ void play_game(wloc pa, WINDOW* dummy) {
             mvaddstr(pa.y - 1, pa.x + 7, scorebuffer);
             attron(COLOR_PAIR(1));
         } else {
+            // Remove the last body segment if there was no apple collision
             mvaddch(previous.row, previous.col, ' ');
             mvinchnstr(snake->head->position->row, snake->head->position->col, next_space, 1);
             updatevalidpos(validapplepositions, pa, snake->head->position, &previous);
         }
 
-        // cast to unsigned char and strip off chtype formatting to compare characters
+        // Check for collision with self or play area boundary
+        // Draw final frame and free memory before returning 
         if ((unsigned char)next_space[0] == ('-' & A_CHARTEXT) 
             || (unsigned char)next_space[0] == (':' & A_CHARTEXT) 
             || !in_bounds(*snake->head->position, pa)) {
@@ -289,28 +188,9 @@ void play_game(wloc pa, WINDOW* dummy) {
             return;
         }
 
-        // place head
+        //Place head in new location, refresh the screen, and sleep for an interval 
         mvaddch(snake->head->position->row, snake->head->position->col, head);
         refresh();
         nanosleep(&cur, NULL);
     }
-}
-
-int main() {
-    initscr();
-    noecho();
-    start_color();
-    WINDOW* dummy = malloc(sizeof(WINDOW));
-    dummy = newwin(1, 1, 1000, 1000);
-    keypad(dummy, true);
-    curs_set(0);
-    init_pair(1, COLOR_GREEN, COLOR_BLACK);
-    init_pair(2, COLOR_RED, COLOR_BLACK);
-
-    wloc pa = get_play_area(stdscr);
-    draw_border(pa, '!');
-    play_game(pa, dummy);
-    
-    endwin();
-    return 0;
 }
