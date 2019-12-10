@@ -1,5 +1,6 @@
 # Snake
 The [classic game](https://en.wikipedia.org/wiki/Snake_(video_game_genre)) implemented in C using the ncurses library to draw the game in a terminal session.
+![demo gif](https://github.com/jpritcha3-14/snake-game/blob/master/demo.gif)
 
 ## Install
 The game should work on most any Unix-like system with ncurses available, just make sure you have ncurses installed.  To install ncurses on Debian/Ubuntu use: ```sudo apt-get install libncurses5-dev libncursesw5-dev```
