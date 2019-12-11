@@ -38,15 +38,15 @@ loc tolocation(int idx, wloc pa) {
 }
 
 // Update valid locations for apple placement
-void updatevalidpos(bool* valid, wloc pa, loc* toremove, loc* toadd) {
-    valid[toarrayidx(toremove->row, toremove->col, pa)] = false;
+void updatevalidpos(int* valid, wloc pa, const loc* toremove, const loc* toadd) {
+    valid[toarrayidx(toremove->row, toremove->col, pa)] = 0;
     if (toadd) {
-        valid[toarrayidx(toadd->row, toadd->col, pa)] = true;
+        valid[toarrayidx(toadd->row, toadd->col, pa)] = 1;
     }
 }
 
 // Return a valid location to place the next apple
-loc placeapple(const bool* valid, wloc pa) {
+loc placeapple(const int* valid, wloc pa) {
     int len = pa.rows * pa.usefulcols;
     int apple = rand() % len;
     while (!valid[apple]) {

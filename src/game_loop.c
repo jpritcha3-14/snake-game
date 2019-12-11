@@ -6,7 +6,7 @@
 #include "helper_functions.h"
 #include "game_loop.h"
 
-void play_game(wloc pa, WINDOW* dummy) {
+void play_game(wloc pa, WINDOW* dummy, enum speed s) {
     clear();
     draw_border(pa, '!');
 
@@ -22,7 +22,17 @@ void play_game(wloc pa, WINDOW* dummy) {
     enum direction dir = East;
     struct timespec cur;
     cur.tv_sec = 0;
-    cur.tv_nsec = 100000000;
+    switch (s) {
+        case slow:
+           cur.tv_nsec = 400000000;
+           break; 
+        case normal:
+           cur.tv_nsec = 200000000;
+           break; 
+        case fast:
+           cur.tv_nsec = 100000000;
+           break; 
+    }
     chtype *next_space = malloc(2 * sizeof(chtype));
 
     // Initialize snake
@@ -34,9 +44,9 @@ void play_game(wloc pa, WINDOW* dummy) {
     snake->length = 1;
 
     // Intialize apple position array and place first apple
-    bool* validapplepositions = malloc(pa.rows * pa.cols * sizeof(bool));
-    validapplepositions[0] = false;
-    for (int i = 1; i < pa.rows * pa.cols; i++) validapplepositions[i] = true;
+    int* validapplepositions = malloc(pa.rows * pa.cols * sizeof(int));
+    validapplepositions[0] = 0;
+    for (int i = 1; i < pa.rows * pa.cols; i++) validapplepositions[i] = 1;
     loc apple = placeapple(validapplepositions, pa);
 
     // Draw snake, apple, and score
@@ -105,25 +115,15 @@ void play_game(wloc pa, WINDOW* dummy) {
         if (snake->length == 1) {
             previous.row = snake->head->position->row;
             previous.col = snake->head->position->col;
-        } else if (snake->length == 2) {
-            previous.row = snake->tail->position->row;
-            previous.col = snake->tail->position->col;
-            snake->tail->position->row = snake->head->position->row;
-            snake->tail->position->col = snake->head->position->col;
         } else {
             previous.row = snake->tail->position->row;
             previous.col = snake->tail->position->col;
-            mvaddch(snake->head->position->row, snake->head->position->col, 
-                    dir == North || dir == South ? ':' : '-');
             snake->tail->position->row = snake->head->position->row;
             snake->tail->position->col = snake->head->position->col;
             snake->tail = snake->tail->prev;
+            mvaddch(snake->head->position->row, snake->head->position->col, 
+                    dir == North || dir == South ? ':' : '-');
         }
-
-        // Draw a new body segment where head was
-        mvaddch(snake->head->position->row, 
-                snake->head->position->col, 
-                dir == North || dir == South ? ':' : '-');
 
         // Move the head to new position
         if (dir == West) {
@@ -138,7 +138,6 @@ void play_game(wloc pa, WINDOW* dummy) {
 
         // Get character present on screen in new head location
         mvinchnstr(snake->head->position->row, snake->head->position->col, next_space, 1);
-
 
         // Grow snake body, update score, and place a new apple when 
         // the snake head reaches the apple on screen.
@@ -172,11 +171,22 @@ void play_game(wloc pa, WINDOW* dummy) {
             // Remove the last body segment if there was no apple collision
             mvaddch(previous.row, previous.col, ' ');
             mvinchnstr(snake->head->position->row, snake->head->position->col, next_space, 1);
-            updatevalidpos(validapplepositions, pa, snake->head->position, &previous);
+
+            // The following is a VERY important bounds check!  The head can only 
+            // be out of bounds on the last game loop iteration before the game 
+            // ends, but this can (in certain circumstances) write to a memory 
+            // location outside of the bounds pointed to by validapplepositions.
+            // This corrupts the heap and crashes the process when we attempt to 
+            // free memory in the following conditional.  This is an excellent 
+            // example of a subtle bug that can make C debugging so difficult!  
+            // It took me several hours of head scratching to find.
+            if (in_bounds(*snake->head->position, pa)) { 
+                updatevalidpos(validapplepositions, pa, snake->head->position, &previous);
+            }
         }
 
-        // Check for collision with self or play area boundary
-        // Draw final frame and free memory before returning 
+        // Check for collision with self or play area boundary. Draw the final 
+        // frame and free memory before returning to the menu.
         if ((unsigned char)next_space[0] == ('-' & A_CHARTEXT) 
             || (unsigned char)next_space[0] == (':' & A_CHARTEXT) 
             || !in_bounds(*snake->head->position, pa)) {
@@ -192,7 +202,7 @@ void play_game(wloc pa, WINDOW* dummy) {
             return;
         }
 
-        //Place head in new location, refresh the screen, and sleep for an interval 
+        // Place head in new location, refresh the screen, and sleep for an interval 
         mvaddch(snake->head->position->row, snake->head->position->col, head);
         refresh();
         nanosleep(&cur, NULL);

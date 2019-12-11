@@ -2,6 +2,8 @@
 #define STRUCT_HEADER
 enum direction{North, South, East, West};
 
+enum speed {slow, normal, fast};
+
 struct loc {
     int row;
     int col;
