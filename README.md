@@ -6,7 +6,7 @@ The [classic game](https://en.wikipedia.org/wiki/Snake_(video_game_genre)) imple
 ## Controls
 #### Menu
 - w/s: Move cursor
-- a/d: Change setting (speed)
+- a/d: Change setting (speed, size)
 - space: Select
 
 #### Game
@@ -24,7 +24,8 @@ Then use the makefile to compile, or use gcc directly:
 This is just a small project to get my feet wet with C again after writing a lot of Python over the past few years.  It's been a great way to refamiliarize myself with pointer manipulation and memory allocation, learn ncurses, practice manipulating structs and higher level data structures with pointers, and use gdb to help squash subtle memory bugs.  I would highly reccomend this kind of project to anyone wanting to improve their C skills :)
 
 ## Future Updates
-- Refactor some of the lower level structures and functions to make the code more concise and readable.
-- Rewrite the play area as a curses window structure to make indexing cleaner.
-- Add menu option to select play area size.
 - Add high scores for each option combination.
+- Refactor for conciseness and readability.
+- ~~Rewrite the play area as a curses window structure to make indexing cleaner.~~
+- ~~Add menu option to select play area size.~~
+- ~~Add menu option to select play speed.~~
