@@ -9,12 +9,7 @@
 
 enum option {start, speed, size, score, quit};
 enum size {small, med, large};
-
-const struct sizes {
-    loc small;
-    loc med;
-    loc large;
-} sizes = {{10, 25}, {15, 50}, {20, 75}};
+const loc sizes[] = {{10, 25}, {15, 50}, {20, 75}};
 
 struct cursor {
     char* text;
@@ -79,23 +74,37 @@ void draw_menu(wloc* ma) {
 enum option get_max_size() {
     int r, c;
     getmaxyx(stdscr, r, c);
-    if (r < sizes.med.row || c < sizes.med.col) {
+    if (r < sizes[med].row + 1 || c < sizes[med].col) {
         return 0;  
-    } else if (r < sizes.large.row || c < sizes.large.col) {
+    } else if (r < sizes[large].row + 1 || c < sizes[large].col) {
         return 1;
     } else {
         return 2; 
     }
 }
 
-WINDOW* getwindow(enum size sz) {
+WINDOW* getgamewindow(enum size sz) {
+    int rows, cols;
+    int row, col;
+    getmaxyx(stdscr, rows, cols);
+        row = rows / 2 - (sizes[sz].row / 2);
+        row = row <= 0 ? 1 : row;
+        col = cols / 2 - (sizes[sz].col / 2);
+        col = col < 0 ? 0 : col;
     if (sz == small) {
-        return newwin(10, 25, 0, 0);
+        return subwin(stdscr, 10, 25, row, col);
     } else if (sz == med) {
-        return newwin(15, 50, 0, 0);
+        return subwin(stdscr, 15, 50, row, col);
     } else {
-        return newwin(20, 75, 0, 0);
+        return subwin(stdscr, 20, 75, row, col);
     }
+}
+
+WINDOW* getscorewindow(WINDOW* pa) {
+    int y, x;
+    wmove(pa, 0, 0);
+    getparyx(pa, y, x);
+    return subwin(stdscr, 1, 25, y - 1, x);
 }
 
 int show_menu(wloc* ma, WINDOW* dummy) {
@@ -104,8 +113,8 @@ int show_menu(wloc* ma, WINDOW* dummy) {
     w.tv_nsec = 0;
     struct cursor c = {"--<", "   ", 3, start};
     enum speed s = normal;
-    enum size sz = small;
     enum size max_size = get_max_size();
+    enum size sz = max_size;
     attron(A_BOLD);
     draw_menu(ma);
     draw_cursor(ma, c);
@@ -135,12 +144,14 @@ int show_menu(wloc* ma, WINDOW* dummy) {
             if (input == 'a' && sz > small) sz--; draw_option(ma, c.option, (int)s, (int)sz);
         } else if (input == ' ') {
             if (c.option == start) {
-                WINDOW* pa = getwindow(sz);
+                WINDOW* pa = getgamewindow(sz);
+                WINDOW* sa = getscorewindow(pa);
                 clear();
                 refresh();
-                play_game(pa, dummy, s);
+                play_game(pa, sa, dummy, s);
                 nanosleep(&w, NULL);
                 delwin(pa);
+                delwin(sa);
                 clear();
                 refresh();
                 wtimeout(dummy, 0);

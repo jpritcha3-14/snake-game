@@ -6,7 +6,7 @@
 #include "helper_functions.h"
 #include "game_loop.h"
 
-void play_game(WINDOW* pa, WINDOW* dummy, enum speed s) {
+void play_game(WINDOW* pa, WINDOW* sa, WINDOW* dummy, enum speed s) {
     int actualrows, actualcols;
     int rows, cols;
     getmaxyx(pa, actualrows, actualcols);
@@ -58,14 +58,17 @@ void play_game(WINDOW* pa, WINDOW* dummy, enum speed s) {
     wattron(pa, COLOR_PAIR(2));
     wattron(pa, A_BOLD);
     mvwaddch(pa, apple.row, apple.col, 'a');
-    /* NEED TO FIGURE OUT SCORE
-    mvaddch(pa.y-1, pa.x+7, '0');
-    wattron(pa, COLOR_PAIR(1));
-    mvaddstr(pa.y-1, pa.x, "SCORE:");
-    */
     wattron(pa, COLOR_PAIR(1));
     mvwaddch(pa, snake->head->position->row, snake->head->position->col, head);
+
+    wattron(sa, A_BOLD);
+    wattron(sa, COLOR_PAIR(1));
+    mvwaddstr(sa, 0, 0, "SCORE:");
+    wattron(sa, COLOR_PAIR(2));
+    mvwaddch(sa, 0, 7, '0');
+
     wrefresh(pa);
+    wrefresh(sa);
 
     // Block until first key pressed, then set input to non-blocking
     nxt = wgetch(dummy);
@@ -186,7 +189,8 @@ void play_game(WINDOW* pa, WINDOW* dummy, enum speed s) {
             apple = placeapple(validapplepositions, rows, cols);
             wattron(pa, COLOR_PAIR(2));
             mvwaddch(pa, apple.row, apple.col, 'a');
-            //mvaddstr(pa.y - 1, pa.x + 7, scorebuffer); SCORE!!!!
+            mvwaddstr(sa, 0, 7, scorebuffer);
+            wrefresh(sa);
             wattron(pa, COLOR_PAIR(1));
         } else {
             // Remove the last body segment if there was no apple collision

@@ -61,7 +61,7 @@ wloc* get_menu_area(WINDOW* w) {
     wloc* menu_area = malloc(sizeof(wloc)); 
     int wrows, wcols;
     getmaxyx(w, wrows, wcols);
-    if (wrows < 10 || wcols < 20 || menu_area == NULL) {
+    if (wrows < 11 || wcols < 25 || menu_area == NULL) {
         return NULL;
     }
     menu_area->x = (wcols / 2) - 10;
