@@ -88,6 +88,16 @@ enum option get_max_size() {
     }
 }
 
+WINDOW* getwindow(enum size sz) {
+    if (sz == small) {
+        return newwin(10, 25, 0, 0);
+    } else if (sz == med) {
+        return newwin(15, 50, 0, 0);
+    } else {
+        return newwin(20, 75, 0, 0);
+    }
+}
+
 int show_menu(wloc* ma, WINDOW* dummy) {
     struct timespec w;
     w.tv_sec = 1;
@@ -105,6 +115,7 @@ int show_menu(wloc* ma, WINDOW* dummy) {
     char input;
     
     for (;;) {
+        attron(A_BOLD);
         draw_menu(ma);
         draw_cursor(ma, c);
         draw_option(ma, speed, (int)s, (int)sz);
@@ -124,8 +135,12 @@ int show_menu(wloc* ma, WINDOW* dummy) {
             if (input == 'a' && sz > small) sz--; draw_option(ma, c.option, (int)s, (int)sz);
         } else if (input == ' ') {
             if (c.option == start) {
-                //play_game(ma, dummy, s);
+                WINDOW* pa = getwindow(sz);
+                clear();
+                refresh();
+                play_game(pa, dummy, s);
                 nanosleep(&w, NULL);
+                delwin(pa);
                 clear();
                 refresh();
                 wtimeout(dummy, 0);

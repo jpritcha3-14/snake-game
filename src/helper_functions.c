@@ -21,38 +21,38 @@ void freesnake(struct linked_list* snake) {
 }
 
 // 2D to 1D coordinate transformation
-int toarrayidx(int row, int col, wloc pa) {
-    int translatedcol = (col - pa.x - 2) / 2;
-    int translatedrow = row - pa.y - 1;
-    return translatedrow * ((pa.cols - 1) / 2) + translatedcol; 
+int toarrayidx(int row, int col, int cols) {
+    int translatedcol = (col - 2) / 2;
+    int translatedrow = row - 1;
+    return translatedrow * cols + translatedcol; 
 }
 
 // 1D to 2D coordinate transformation
-loc tolocation(int idx, wloc pa) {    
-    int translatedcol = idx % pa.usefulcols;
-    int translatedrow = idx / pa.usefulcols;
+loc tolocation(int idx, int cols) {    
+    int translatedcol = idx % cols;
+    int translatedrow = idx / cols;
     loc loconscreen;
-    loconscreen.row = translatedrow + pa.y + 1;
-    loconscreen.col = (translatedcol * 2) + pa.x + 2;
+    loconscreen.row = translatedrow + 1;
+    loconscreen.col = (translatedcol * 2) + 2;
     return loconscreen;
 }
 
 // Update valid locations for apple placement
-void updatevalidpos(int* valid, wloc pa, const loc* toremove, const loc* toadd) {
-    valid[toarrayidx(toremove->row, toremove->col, pa)] = 0;
+void updatevalidpos(int* valid, const loc* toremove, const loc* toadd, int cols) {
+    valid[toarrayidx(toremove->row, toremove->col, cols)] = 0;
     if (toadd) {
-        valid[toarrayidx(toadd->row, toadd->col, pa)] = 1;
+        valid[toarrayidx(toadd->row, toadd->col, cols)] = 1;
     }
 }
 
 // Return a valid location to place the next apple
-loc placeapple(const int* valid, wloc pa) {
-    int len = pa.rows * pa.usefulcols;
+loc placeapple(const int* valid, int rows, int cols) {
+    int len = rows * cols;
     int apple = rand() % len;
     while (!valid[apple]) {
         apple = (apple + 1) % len; 
     } 
-    return tolocation(apple, pa);
+    return tolocation(apple, cols);
 }
 
 // Determine the size of the play area 
@@ -72,26 +72,29 @@ wloc* get_menu_area(WINDOW* w) {
 }
 
 // Draw a border around the paly area
-void draw_border(wloc pa, char c) {
-    move(pa.y, pa.x);
-    attron(A_BOLD);
-    for (int i = pa.x; i <= pa.x + pa.cols + 1; i++) {
-        addch(c); 
+void draw_border(WINDOW* pa, char c) {
+    int rows, cols;
+    getmaxyx(pa, rows, cols);
+    wmove(pa, 0, 0);
+    wattron(pa, A_BOLD);
+
+    for (int i = 0; i < cols; i++) {
+        waddch(pa, c); 
     }
-    for (int i = pa.y + 1; i <= pa.y + pa.rows; i++) {
-        mvaddch(i, pa.x, c);
-        mvaddch(i, pa.x + pa.cols + 1, c);
+    for (int i = 1; i < rows; i++) {
+        mvwaddch(pa, i, 0, c);
+        mvwaddch(pa, i, cols - 1, c);
     }
-    move(pa.y + pa.rows + 1, pa.x);
-    for (int i = pa.x; i <= pa.x + pa.cols + 1; i++) {
-        addch(c); 
+    wmove(pa, rows - 1, 0);
+    for (int i = 0; i < cols - 1; i++) {
+        waddch(pa, c); 
     }
     attroff(A_BOLD);
-    refresh();
+    wrefresh(pa);
 }
 
 // Determine if a given location is in the play area
-bool in_bounds(loc l, wloc w) {
-    return (l.row > w.y && l.row < w.y + w.rows + 1
-            && l.col > w.x && l.col < w.x + w.cols + 1);
+bool in_bounds(loc l, int rows, int cols) {
+    return (l.row > 0 && l.row < rows - 1
+            && l.col > 0 && l.col < cols - 1);
 }

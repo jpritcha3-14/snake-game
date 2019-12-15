@@ -3,12 +3,12 @@
 #include <ncurses.h>
 
 void freesnake(struct linked_list* snake);
-int toarrayidx(int row, int col, wloc pa); 
-loc tolocation(int idx, wloc pa);    
-void updatevalidpos(int* valid, wloc pa, const loc* toremove, const loc* toadd); 
-loc placeapple(const int* valid, wloc pa); 
+int toarrayidx(int row, int col, int cols); 
+loc tolocation(int idx, int cols);    
+void updatevalidpos(int* valid, const loc* toremove, const loc* toadd, int cols); 
+loc placeapple(const int* valid, int rows, int cols); 
 wloc* get_menu_area(WINDOW* w);
-void draw_border(wloc pa, char c);
-bool in_bounds(loc l, wloc w);
+void draw_border(WINDOW* pa, char c);
+bool in_bounds(loc l, int rows, int cols);
 
 #endif
