@@ -57,17 +57,18 @@ loc placeapple(const int* valid, wloc pa) {
 
 // Determine the size of the play area 
 // based on the size of the terminal display
-wloc get_play_area(WINDOW* w) {
-    wloc play_area; 
+wloc* get_menu_area(WINDOW* w) {
+    wloc* menu_area = malloc(sizeof(wloc)); 
     int wrows, wcols;
     getmaxyx(w, wrows, wcols);
-    play_area.x = (wcols / 4);
-    play_area.y = (wrows / 4);
-    play_area.cols = (wcols / 2);
-    play_area.cols += (wcols / 2) % 2 ? 0 : 1;
-    play_area.usefulcols = (play_area.cols - 1) / 2; 
-    play_area.rows = (wrows / 2);
-    return play_area;
+    if (wrows < 10 || wcols < 20 || menu_area == NULL) {
+        return NULL;
+    }
+    menu_area->x = (wcols / 2) - 10;
+    menu_area->y = (wrows / 2) - 5;
+    menu_area->cols = (wcols / 2);
+    menu_area->rows = (wrows / 2);
+    return menu_area;
 }
 
 // Draw a border around the paly area

@@ -18,9 +18,15 @@ int main() {
     init_pair(1, COLOR_GREEN, COLOR_BLACK);
     init_pair(2, COLOR_RED, COLOR_BLACK);
 
-    wloc pa = get_play_area(stdscr);
-    while(show_menu(pa, dummy));
+    wloc* ma = get_menu_area(stdscr);
+    if (ma == NULL) {
+        printf("Terminal too small\n");
+        endwin();
+        return 1;
+    } 
 
+    while(show_menu(ma, dummy));
+    free(ma);
     endwin();
     return 0;
 }
