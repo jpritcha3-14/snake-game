@@ -43,7 +43,7 @@ const char* eraseoption = "          ";
 void draw_cursor (wloc* ma, struct cursor c) {
      c.option % 2 ? attron(COLOR_PAIR(2)) : attron(COLOR_PAIR(1));
      mvaddstr(ma->y + c.option * 2, ma->x - c.textlen - 1, c.text);
-     mvaddstr(ma->y + c.option * 2 - 2, ma->x - c.textlen - 1, c.blank);
+     mvaddstr(ma->y + c.option * 2 - (c.option > 0 ? 2 : -2), ma->x - c.textlen - 1, c.blank);
      mvaddstr(ma->y + c.option * 2 + 2, ma->x - c.textlen - 1, c.blank);
      refresh();
      attroff(COLOR_PAIR);
@@ -61,6 +61,20 @@ void draw_option (wloc* ma, enum option op, int speedchoice, int sizechoice) {
      }
      refresh();
      attroff(COLOR_PAIR);
+}
+
+void draw_logo(wloc* la) {
+    if (la != NULL) {
+        attron(COLOR_PAIR(1));
+        FILE* fp;
+        char buff[255];
+
+        fp = fopen("./logo.txt", "r");
+        int i = la->y;
+        while (fgets(buff, 255, fp)) {
+            mvaddstr(i++, la->x, buff);
+        }
+    }
 }
 
 void draw_menu(wloc* ma) {
@@ -107,7 +121,8 @@ WINDOW* getscorewindow(WINDOW* pa) {
     return subwin(stdscr, 1, 25, y - 1, x);
 }
 
-int show_menu(wloc* ma, WINDOW* dummy) {
+int show_menu(wloc* ma, wloc* la, WINDOW* dummy) {
+    char input;
     struct timespec w;
     w.tv_sec = 1;
     w.tv_nsec = 0;
@@ -115,16 +130,10 @@ int show_menu(wloc* ma, WINDOW* dummy) {
     enum speed s = normal;
     enum size max_size = get_max_size();
     enum size sz = max_size;
-    attron(A_BOLD);
-    draw_menu(ma);
-    draw_cursor(ma, c);
-    draw_option(ma, speed, (int)s, (int)sz);
-    draw_option(ma, size, (int)s, (int)sz);
-
-    char input;
     
     for (;;) {
         attron(A_BOLD);
+        draw_logo(la);
         draw_menu(ma);
         draw_cursor(ma, c);
         draw_option(ma, speed, (int)s, (int)sz);

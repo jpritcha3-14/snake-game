@@ -55,17 +55,40 @@ loc placeapple(const int* valid, int rows, int cols) {
     return tolocation(apple, cols);
 }
 
+wloc* get_logo_area(WINDOW* w) {
+    wloc* logo_area = malloc(sizeof(wloc)); 
+    int wrows, wcols;
+    getmaxyx(w, wrows, wcols);
+    if (logo_area == NULL) {
+        endwin(); 
+        printf("Malloc failed (logo)\n");
+        exit(1);
+    }
+    if (wrows < 22 || wcols < 60) {
+        free(logo_area);
+        return NULL;
+    }
+    logo_area->x = (wcols - 60) / 2;
+    logo_area->y = (wrows - 22) / 2;
+    logo_area->rows = 11;
+    logo_area->cols = 60;
+    return logo_area;
+}
+
+
 // Determine the size of the play area 
 // based on the size of the terminal display
-wloc* get_menu_area(WINDOW* w) {
+wloc* get_menu_area(WINDOW* w, wloc* la) {
     wloc* menu_area = malloc(sizeof(wloc)); 
     int wrows, wcols;
     getmaxyx(w, wrows, wcols);
     if (wrows < 11 || wcols < 25 || menu_area == NULL) {
-        return NULL;
+        endwin();
+        printf("Terminal too small\n");
+        exit(1);
     }
-    menu_area->x = (wcols / 2) - 10;
-    menu_area->y = (wrows / 2) - 5;
+    menu_area->x = (wcols / 2) - 7;
+    menu_area->y = la != NULL ? la->y + 12 : (wrows / 2) - 5;
     menu_area->cols = (wcols / 2);
     menu_area->rows = (wrows / 2);
     return menu_area;

@@ -1,7 +1,7 @@
 # Snake
 The [classic game](https://en.wikipedia.org/wiki/Snake_(video_game_genre)) implemented in C using the ncurses library to draw the game in a terminal session. Grow as long as possible by eating apples that appear!
 
-![demo gif](https://github.com/jpritcha3-14/snake-game/blob/master/demo.gif)
+![menu png](https://github.com/jpritcha3-14/snake-game/blob/master/menu.png) ![demo gif](https://github.com/jpritcha3-14/snake-game/blob/master/demo.gif)
 
 ## Controls
 #### Menu

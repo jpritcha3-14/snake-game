@@ -18,15 +18,12 @@ int main() {
     init_pair(1, COLOR_GREEN, COLOR_BLACK);
     init_pair(2, COLOR_RED, COLOR_BLACK);
 
-    wloc* ma = get_menu_area(stdscr);
-    if (ma == NULL) {
-        printf("Terminal too small\n");
-        endwin();
-        return 1;
-    } 
+    wloc* la = get_logo_area(stdscr);
+    wloc* ma = get_menu_area(stdscr, la);
 
-    while(show_menu(ma, dummy));
+    while(show_menu(ma, la, dummy));
     free(ma);
+    free(la);
     endwin();
     return 0;
 }
