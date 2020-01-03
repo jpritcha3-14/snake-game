@@ -34,7 +34,7 @@ const char* optiontext[] = {
     "Start Game",
     "Speed:",
     "Size:",
-    "High Scores TBA",
+    "High Scores",
     "Quit"
 };
 
@@ -74,6 +74,7 @@ void draw_logo(wloc* la) {
         while (fgets(buff, 255, fp)) {
             mvaddstr(i++, la->x, buff);
         }
+        fclose(fp);
     }
 }
 
@@ -114,14 +115,18 @@ WINDOW* getgamewindow(enum size sz) {
     }
 }
 
-WINDOW* getscorewindow(WINDOW* pa) {
+WINDOW* getscorewindow(WINDOW* pw) {
     int y, x;
-    wmove(pa, 0, 0);
-    getparyx(pa, y, x);
+    wmove(pw, 0, 0);
+    getparyx(pw, y, x);
     return subwin(stdscr, 1, 25, y - 1, x);
 }
 
-int show_menu(wloc* ma, wloc* la, WINDOW* dummy) {
+WINDOW* gethighscorewindow(wloc* hsa) {
+    return subwin(stdscr, 11, 25, hsa->y, hsa->x);
+}
+
+int show_menu(wloc* ma, wloc* la, wloc* hsa, WINDOW* dummy) {
     char input;
     struct timespec w;
     w.tv_sec = 1;
@@ -153,19 +158,29 @@ int show_menu(wloc* ma, wloc* la, WINDOW* dummy) {
             if (input == 'a' && sz > small) sz--; draw_option(ma, c.option, (int)s, (int)sz);
         } else if (input == ' ') {
             if (c.option == start) {
-                WINDOW* pa = getgamewindow(sz);
-                WINDOW* sa = getscorewindow(pa);
+                WINDOW* pw = getgamewindow(sz);
+                WINDOW* sw = getscorewindow(pw);
                 clear();
                 refresh();
-                play_game(pa, sa, dummy, s);
+                play_game(pw, sw, dummy, s);
                 nanosleep(&w, NULL);
-                delwin(pa);
-                delwin(sa);
+                delwin(pw);
+                delwin(sw);
                 clear();
                 refresh();
                 wtimeout(dummy, 0);
                 while (wgetch(dummy) != ERR);
                 wtimeout(dummy, -1);
+            } else if (c.option == score) {
+                WINDOW* hsw = gethighscorewindow(hsa);
+                clear();
+                refresh();
+                mvwaddstr(hsw, 0, 0, "High Scores");
+                wrefresh(hsw);
+                nanosleep(&w, NULL);
+                delwin(hsw);
+                clear();
+                refresh();
             } else if (c.option == quit) break;
         }
     }

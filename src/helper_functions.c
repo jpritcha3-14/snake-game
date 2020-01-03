@@ -57,13 +57,14 @@ loc placeapple(const int* valid, int rows, int cols) {
 
 wloc* get_logo_area(WINDOW* w) {
     wloc* logo_area = malloc(sizeof(wloc)); 
-    int wrows, wcols;
-    getmaxyx(w, wrows, wcols);
     if (logo_area == NULL) {
         endwin(); 
         printf("Malloc failed (logo)\n");
         exit(1);
     }
+    int wrows, wcols;
+    getmaxyx(w, wrows, wcols);
+    // Terminal too small for logo
     if (wrows < 22 || wcols < 60) {
         free(logo_area);
         return NULL;
@@ -76,8 +77,8 @@ wloc* get_logo_area(WINDOW* w) {
 }
 
 
-// Determine the size of the play area 
-// based on the size of the terminal display
+// Determine where to place the menu 
+// based on the size of the terminal
 wloc* get_menu_area(WINDOW* w, wloc* la) {
     wloc* menu_area = malloc(sizeof(wloc)); 
     int wrows, wcols;
@@ -92,6 +93,18 @@ wloc* get_menu_area(WINDOW* w, wloc* la) {
     menu_area->cols = (wcols / 2);
     menu_area->rows = (wrows / 2);
     return menu_area;
+}
+
+// Determine the location of the high score window
+wloc* get_hs_area(WINDOW* w) {
+    wloc* hs_area = malloc(sizeof(wloc));
+    int wrows, wcols;
+    getmaxyx(w, wrows, wcols);
+    hs_area->x = (wcols / 2) - 7;
+    hs_area->y = (wrows / 2) - 5;
+    hs_area->cols = (wcols / 2);
+    hs_area->rows = (wrows / 2);
+    return hs_area;
 }
 
 // Draw a border around the paly area

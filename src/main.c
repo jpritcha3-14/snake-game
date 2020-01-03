@@ -20,10 +20,14 @@ int main() {
 
     wloc* la = get_logo_area(stdscr);
     wloc* ma = get_menu_area(stdscr, la);
+    wloc* hsa = get_hs_area(stdscr);
 
-    while(show_menu(ma, la, dummy));
+    while(show_menu(ma, la, hsa, dummy));
+
+    free(hsa);
     free(ma);
     free(la);
+
     endwin();
     return 0;
 }
