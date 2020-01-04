@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "high_scores.h"
 #include "structs.h"
 #include "helper_functions.h"
 #include "game_loop.h"
@@ -123,7 +124,7 @@ WINDOW* getscorewindow(WINDOW* pw) {
 }
 
 WINDOW* gethighscorewindow(wloc* hsa) {
-    return subwin(stdscr, 11, 25, hsa->y, hsa->x);
+    return subwin(stdscr, 11, 26, hsa->y, hsa->x);
 }
 
 int show_menu(wloc* ma, wloc* la, wloc* hsa, WINDOW* dummy) {
@@ -175,9 +176,7 @@ int show_menu(wloc* ma, wloc* la, wloc* hsa, WINDOW* dummy) {
                 WINDOW* hsw = gethighscorewindow(hsa);
                 clear();
                 refresh();
-                mvwaddstr(hsw, 0, 0, "High Scores");
-                wrefresh(hsw);
-                nanosleep(&w, NULL);
+                show_high_scores(hsw, dummy, sizetext[sz], speedtext[s]);
                 delwin(hsw);
                 clear();
                 refresh();
