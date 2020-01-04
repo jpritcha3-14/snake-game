@@ -4,9 +4,15 @@
 #include <ncurses.h>
 #include <sqlite3.h>
 
+struct rowscore {
+    int row;
+    int score;
+};
 
 int get_num_entries(const char* table);
 void append_high_score(const char* table, const char* name, const int score); 
+void update_high_score(const char* table, const int, const char* name, const int score); 
+struct rowscore* get_min_row_and_score(const char* table);
 
 void show_high_scores(WINDOW* hsw, WINDOW* dummy, const char* size, const char* speed) {
     char table[32];
@@ -64,7 +70,8 @@ void add_high_score(WINDOW* hsw, int score, const char* size, const char* speed)
     char table[32];
     sprintf(table, "%s%s", speed, size);
     int entries = get_num_entries(table);
-    if (entries < 10) {
+    struct rowscore* rs = get_min_row_and_score(table);
+    if (entries < 10 || score > rs->score) {
         echo(); 
         curs_set(2);
         char hs_msg[32];
@@ -75,15 +82,19 @@ void add_high_score(WINDOW* hsw, int score, const char* size, const char* speed)
         mvwprintw(hsw, 1, 0, msg);
         wmove(hsw, 2, 0);
         wgetnstr(hsw, name, 10);
-        append_high_score(table, name, score);
+        if (entries < 10) {
+            append_high_score(table, name, score);
+        } else {
+            update_high_score(table, rs->row, name, score);
+        }
         curs_set(0);
         noecho();
     }
+    free(rs);
 }
 
 int get_num_entries(const char* table) {
     sqlite3 *db;
-    //char* err_msg = 0;
     sqlite3_stmt *table_res;
     sqlite3_stmt *count_res;
 
@@ -124,7 +135,6 @@ int get_num_entries(const char* table) {
 void append_high_score(const char* table, const char* name, const int score) {
 
     sqlite3 *db;
-    //char* err_msg = 0;
     sqlite3_stmt *res;
     
     // Open db connection
@@ -163,4 +173,80 @@ void append_high_score(const char* table, const char* name, const int score) {
     sqlite3_step(res);
     sqlite3_finalize(res);
     sqlite3_close(db);
+}
+
+
+void update_high_score(const char* table, const int lowrow, const char* name, const int score) {
+    sqlite3 *db;
+    sqlite3_stmt *res;
+    
+    // Open db connection
+    int rc = sqlite3_open("high_scores.db", &db);
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(db)); 
+        sqlite3_close(db);
+        return;
+    }
+
+    // Update lowest value in table 
+    char sql[128];
+    sprintf(sql, "UPDATE %s SET name=?, score=? WHERE rowid=?;", table);
+
+    rc = sqlite3_prepare_v2(db, sql, -1, &res, 0);
+    if (rc == SQLITE_OK) {
+        if (sqlite3_bind_text(res, 1, name, strlen(name), SQLITE_STATIC) != SQLITE_OK) {
+            fprintf(stderr, "Problem with text bind: %s\n", sqlite3_errmsg(db));
+            sqlite3_finalize(res);
+            sqlite3_close(db);
+            return;
+        }
+        if (sqlite3_bind_int(res, 2, score) != SQLITE_OK) {
+            fprintf(stderr, "Problem with int bind: %s\n", sqlite3_errmsg(db));
+            sqlite3_finalize(res);
+            sqlite3_close(db);
+            return;
+        }
+        if (sqlite3_bind_int(res, 3, lowrow) != SQLITE_OK) {
+            fprintf(stderr, "Problem with int bind: %s\n", sqlite3_errmsg(db));
+            sqlite3_finalize(res);
+            sqlite3_close(db);
+            return;
+        }
+    } else {
+        fprintf(stderr, "Failed to execute statement: %s\n", sqlite3_errmsg(db)); 
+        sqlite3_finalize(res);
+        sqlite3_close(db);
+        return;
+    }
+
+    sqlite3_step(res);
+    sqlite3_finalize(res);
+    sqlite3_close(db);
+}
+
+struct rowscore* get_min_row_and_score(const char* table) {
+    sqlite3 *db;
+    sqlite3_stmt *res;
+    
+    // Open db connection
+    int rc = sqlite3_open("high_scores.db", &db);
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(db)); 
+        sqlite3_close(db);
+        return NULL;
+    }
+
+    // Get lowest score and its rowid
+    char sql[128];
+    sprintf(sql, "SELECT rowid, score FROM %s ORDER BY score ASC LIMIT 1", table);
+    rc = sqlite3_prepare_v2(db, sql, -1, &res, 0);
+
+    struct rowscore* rs = malloc(sizeof(struct rowscore));
+    
+    sqlite3_step(res);
+    rs->row = sqlite3_column_int(res, 0);
+    rs->score = sqlite3_column_int(res, 1);
+    sqlite3_finalize(res);
+    sqlite3_close(db);
+    return rs;
 }
