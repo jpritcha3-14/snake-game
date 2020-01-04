@@ -129,6 +129,7 @@ WINDOW* gethighscorewindow(wloc* hsa) {
 
 int show_menu(wloc* ma, wloc* la, wloc* hsa, WINDOW* dummy) {
     char input;
+    int finalscore = 0;
     struct timespec w;
     w.tv_sec = 1;
     w.tv_nsec = 0;
@@ -157,13 +158,14 @@ int show_menu(wloc* ma, wloc* la, wloc* hsa, WINDOW* dummy) {
         } else if (c.option == size) {
             if (input == 'd' && sz < max_size) sz++; draw_option(ma, c.option, (int)s, (int)sz);
             if (input == 'a' && sz > small) sz--; draw_option(ma, c.option, (int)s, (int)sz);
-        } else if (input == ' ') {
+        } else if (input == ' ') { 
             if (c.option == start) {
                 WINDOW* pw = getgamewindow(sz);
                 WINDOW* sw = getscorewindow(pw);
+                WINDOW* hsw = gethighscorewindow(hsa);
                 clear();
                 refresh();
-                play_game(pw, sw, dummy, s);
+                finalscore = play_game(pw, sw, dummy, s);
                 nanosleep(&w, NULL);
                 delwin(pw);
                 delwin(sw);
@@ -172,6 +174,10 @@ int show_menu(wloc* ma, wloc* la, wloc* hsa, WINDOW* dummy) {
                 wtimeout(dummy, 0);
                 while (wgetch(dummy) != ERR);
                 wtimeout(dummy, -1);
+                add_high_score(hsw, finalscore, sizetext[sz], speedtext[s]);
+                delwin(hsw);
+                clear();
+                refresh();
             } else if (c.option == score) {
                 WINDOW* hsw = gethighscorewindow(hsa);
                 clear();

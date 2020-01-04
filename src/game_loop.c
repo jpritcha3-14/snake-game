@@ -6,9 +6,10 @@
 #include "helper_functions.h"
 #include "game_loop.h"
 
-void play_game(WINDOW* pa, WINDOW* sa, WINDOW* dummy, enum speed s) {
+int play_game(WINDOW* pa, WINDOW* sa, WINDOW* dummy, enum speed s) {
     int actualrows, actualcols;
     int rows, cols;
+    int finalscore = -1;
     getmaxyx(pa, actualrows, actualcols);
     rows = actualrows - 2;
     cols = (actualcols - 3) / 2;
@@ -176,12 +177,13 @@ void play_game(WINDOW* pa, WINDOW* sa, WINDOW* dummy, enum speed s) {
                 wattron(pa, COLOR_PAIR(2));
                 mvwaddch(pa, snake->head->position->row, snake->head->position->col, 'W');
                 wrefresh(pa);
+                finalscore = snake->length - 1;
                 free(next_space);
                 free(validapplepositions);
                 freesnake(snake);
                 wtimeout(dummy, -1);
                 wattroff(pa, COLOR_PAIR(2));
-                return;
+                return finalscore;
             }
 
             sprintf(scorebuffer, "%d", snake->length - 1);
@@ -219,12 +221,13 @@ void play_game(WINDOW* pa, WINDOW* sa, WINDOW* dummy, enum speed s) {
             wattron(pa, COLOR_PAIR(2));
             mvwaddch(pa, snake->head->position->row, snake->head->position->col, 'x');
             wrefresh(pa);
+            finalscore = snake->length - 1;
             free(next_space);
             free(validapplepositions);
             freesnake(snake);
             wtimeout(dummy, -1);
             wattroff(pa, COLOR_PAIR(2));
-            return;
+            return finalscore;
         }
 
         // Place head in new location, refresh the screen, and sleep for an interval 
@@ -233,5 +236,5 @@ void play_game(WINDOW* pa, WINDOW* sa, WINDOW* dummy, enum speed s) {
         wrefresh(pa);
         nanosleep(&cur, NULL);
     }
-return; 
+return finalscore; 
 }
