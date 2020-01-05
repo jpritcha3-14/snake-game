@@ -70,7 +70,7 @@ void draw_logo(wloc* la) {
         FILE* fp;
         char buff[255];
 
-        fp = fopen("./logo.txt", "r");
+        fp = fopen("./assets/logo.txt", "r");
         int i = la->y;
         while (fgets(buff, 255, fp)) {
             mvaddstr(i++, la->x, buff);

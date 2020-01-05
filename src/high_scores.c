@@ -33,7 +33,7 @@ void show_high_scores(WINDOW* hsw, WINDOW* dummy, const char* size, const char* 
     int row = 3;
 
     // Open db connection
-    int rc = sqlite3_open("high_scores.db", &db);
+    int rc = sqlite3_open("./assets/high_scores.db", &db);
     if (rc != SQLITE_OK) {
         fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(db)); 
         sqlite3_close(db);
@@ -109,7 +109,7 @@ int get_num_entries(const char* table) {
     sqlite3_stmt *count_res;
 
     // Open db connection
-    int rc = sqlite3_open("high_scores.db", &db);
+    int rc = sqlite3_open("./assets/high_scores.db", &db);
     if (rc != SQLITE_OK) {
         fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(db)); 
         sqlite3_close(db);
@@ -148,7 +148,7 @@ void append_high_score(const char* table, const char* name, const int score) {
     sqlite3_stmt *res;
     
     // Open db connection
-    int rc = sqlite3_open("high_scores.db", &db);
+    int rc = sqlite3_open("./assets/high_scores.db", &db);
     if (rc != SQLITE_OK) {
         fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(db)); 
         sqlite3_close(db);
@@ -191,7 +191,7 @@ void update_high_score(const char* table, const int lowrow, const char* name, co
     sqlite3_stmt *res;
     
     // Open db connection
-    int rc = sqlite3_open("high_scores.db", &db);
+    int rc = sqlite3_open("./assets/high_scores.db", &db);
     if (rc != SQLITE_OK) {
         fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(db)); 
         sqlite3_close(db);
@@ -239,7 +239,7 @@ struct rowscore* get_min_row_and_score(const char* table) {
     sqlite3_stmt *res;
     
     // Open db connection
-    int rc = sqlite3_open("high_scores.db", &db);
+    int rc = sqlite3_open("./assets/high_scores.db", &db);
     if (rc != SQLITE_OK) {
         fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(db)); 
         sqlite3_close(db);

@@ -9,4 +9,3 @@ gdb : snaketest
 
 clean : 
 	rm snake
-
