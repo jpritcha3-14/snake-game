@@ -1,0 +1,11 @@
+   SSSSS   NNN      NN        A        KK     KK  EEEEEEEEEE
+  SSSSSSS  NNNN     NN       AAA       KK    KK   EEEEEEEEEE
+ SSS   SS  NN NN    NN      AAAAA      KK   KK    EE        
+ SSS       NN  NN   NN     AA   AA     KK KK      EE        
+  SSS      NN  NN   NN    AA     AA    KKKK       EEEEEEEE  
+    SSS    NN   NN  NN   AA       AA   KKKK       EEEEEEEE  
+     SSS   NN   NN  NN  AAAAAAAAAAAAA  KKKK       EE        
+      SSS  NN   NN  NN  AAAAAAAAAAAAA  KK KKK     EE        
+SS    SSS  NN    NN NN  AAA       AAA  KK   KK    EE        
+SSSSSSSSS  NN     NNNN  AAA       AAA  KK    KK   EEEEEEEEEE
+ SSSSSS    NN      NNN  AAA       AAA  KK     KK  EEEEEEEEEE
