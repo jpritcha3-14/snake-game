@@ -100,7 +100,7 @@ wloc* get_hs_area(WINDOW* w) {
     wloc* hs_area = malloc(sizeof(wloc));
     int wrows, wcols;
     getmaxyx(w, wrows, wcols);
-    hs_area->x = (wcols / 2) - 7;
+    hs_area->x = (wcols / 2) - 13;
     hs_area->y = (wrows / 2) - 5;
     hs_area->cols = (wcols / 2);
     hs_area->rows = (wrows / 2);

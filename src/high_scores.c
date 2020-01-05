@@ -17,14 +17,20 @@ struct rowscore* get_min_row_and_score(const char* table);
 void show_high_scores(WINDOW* hsw, WINDOW* dummy, const char* size, const char* speed) {
     char table[32];
     char title[32];
+    wattron(hsw, COLOR_PAIR(1));
     sprintf(table, "%s%s", speed, size);
     sprintf(title, "High Scores: %s/%s", speed, size);
     mvwaddstr(hsw, 0, 0, title);
 
+    wattron(hsw, COLOR_PAIR(2));
+    mvwaddstr(hsw, 2, 3, "Name");
+    mvwaddstr(hsw, 2, 15, "Score");
+
+
     sqlite3 *db;
     sqlite3_stmt *res;
     sqlite3_stmt *table_res;
-    int row = 1;
+    int row = 3;
 
     // Open db connection
     int rc = sqlite3_open("high_scores.db", &db);
@@ -52,10 +58,11 @@ void show_high_scores(WINDOW* hsw, WINDOW* dummy, const char* size, const char* 
     // Print all returned rows
     char buff[10];
     while(sqlite3_step(res) == SQLITE_ROW) {
+        wattron(hsw, COLOR_PAIR((row + 1) % 2 + 1));
         strcpy(buff, "");
         sprintf(buff, "%d", sqlite3_column_int(res, 1));
-        mvwaddstr(hsw, row, 0, (const char*)sqlite3_column_text(res, 0));
-        mvwaddstr(hsw, row, 12, buff);
+        mvwaddstr(hsw, row, 3, (const char*)sqlite3_column_text(res, 0));
+        mvwaddstr(hsw, row, 15, buff);
         row += 1;
     }
     
@@ -78,9 +85,12 @@ void add_high_score(WINDOW* hsw, int score, const char* size, const char* speed)
         sprintf(hs_msg, "High Score: %d", score);
         char msg[] = "Enter your name";
         char name[11];
+        wattron(hsw, COLOR_PAIR(1));
         mvwprintw(hsw, 0, 0, hs_msg);
-        mvwprintw(hsw, 1, 0, msg);
-        wmove(hsw, 2, 0);
+        wattron(hsw, COLOR_PAIR(2));
+        mvwprintw(hsw, 2, 0, msg);
+        wattroff(hsw, COLOR_PAIR);
+        wmove(hsw, 3, 0);
         wgetnstr(hsw, name, 10);
         if (entries < 10) {
             append_high_score(table, name, score);
