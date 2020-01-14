@@ -153,11 +153,15 @@ int show_menu(wloc* ma, wloc* la, wloc* hsa, WINDOW* dummy) {
             c.option++; 
             draw_cursor(ma, c);
         } else if (c.option == speed) {
-            if (input == 'd' && s < fast) s++; draw_option(ma, c.option, (int)s, (int)sz);
-            if (input == 'a' && s > slow) s--; draw_option(ma, c.option, (int)s, (int)sz);
+            if (input == 'd' && s < fast) s++;
+                draw_option(ma, c.option, (int)s, (int)sz);
+            if (input == 'a' && s > slow) s--;
+                draw_option(ma, c.option, (int)s, (int)sz);
         } else if (c.option == size) {
-            if (input == 'd' && sz < max_size) sz++; draw_option(ma, c.option, (int)s, (int)sz);
-            if (input == 'a' && sz > small) sz--; draw_option(ma, c.option, (int)s, (int)sz);
+            if (input == 'd' && sz < max_size) sz++;
+                draw_option(ma, c.option, (int)s, (int)sz);
+            if (input == 'a' && sz > small) sz--;
+                draw_option(ma, c.option, (int)s, (int)sz);
         } else if (input == ' ') { 
             if (c.option == start) {
                 WINDOW* pw = getgamewindow(sz);

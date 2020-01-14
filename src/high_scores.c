@@ -4,15 +4,26 @@
 #include <ncurses.h>
 #include <sqlite3.h>
 
+const char DB_PATH[] = "./assets/high_scores.db";
+
 struct rowscore {
     int row;
     int score;
 };
 
+void check_db(int rc, sqlite3 *db);
 int get_num_entries(const char* table);
 void append_high_score(const char* table, const char* name, const int score); 
 void update_high_score(const char* table, const int, const char* name, const int score); 
 struct rowscore* get_min_row_and_score(const char* table);
+
+void check_db(int rc, sqlite3 *db) {
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(db)); 
+        sqlite3_close(db);
+        exit(1);
+    }
+}
 
 void show_high_scores(WINDOW* hsw, WINDOW* dummy, const char* size, const char* speed) {
     char table[32];
@@ -26,19 +37,15 @@ void show_high_scores(WINDOW* hsw, WINDOW* dummy, const char* size, const char* 
     mvwaddstr(hsw, 2, 3, "Name");
     mvwaddstr(hsw, 2, 15, "Score");
 
-
     sqlite3 *db;
     sqlite3_stmt *res;
     sqlite3_stmt *table_res;
     int row = 3;
 
     // Open db connection
-    int rc = sqlite3_open("./assets/high_scores.db", &db);
-    if (rc != SQLITE_OK) {
-        fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(db)); 
-        sqlite3_close(db);
-    }
-
+    int rc = sqlite3_open(DB_PATH, &db);
+    check_db(rc, db);
+    
     // Create table if it doesn't exit 
     char table_sql[128];
     sprintf(table_sql, "CREATE TABLE IF NOT EXISTS %s(name TEXT, score INTEGER);", table);
@@ -46,12 +53,12 @@ void show_high_scores(WINDOW* hsw, WINDOW* dummy, const char* size, const char* 
     sqlite3_step(table_res);
     sqlite3_finalize(table_res);
 
+    // Select all scores from highest to lowest
     char sql[128]; 
     sprintf(sql, "SELECT name, score FROM %s ORDER BY score DESC;", table);
-
     rc = sqlite3_prepare_v2(db, sql, -1, &res, NULL);
     if (rc != SQLITE_OK) {
-        fprintf(stderr, "Failed to execute count prepare: %s\n", sqlite3_errmsg(db)); 
+        fprintf(stderr, "Failed to execute select: %s\n", sqlite3_errmsg(db)); 
         return;
     }
 
@@ -69,8 +76,8 @@ void show_high_scores(WINDOW* hsw, WINDOW* dummy, const char* size, const char* 
     sqlite3_finalize(res);
     sqlite3_close(db);
 
-    wrefresh(hsw);
-    wgetch(dummy); // Wait for user input to return
+    wrefresh(hsw); // Show printed scores 
+    wgetch(dummy); // Wait for user input to return to menu
 }
 
 void add_high_score(WINDOW* hsw, int score, const char* size, const char* speed) {
@@ -78,20 +85,22 @@ void add_high_score(WINDOW* hsw, int score, const char* size, const char* speed)
     sprintf(table, "%s%s", speed, size);
     int entries = get_num_entries(table);
     struct rowscore* rs = get_min_row_and_score(table);
+
+    // Allow user to enter name
     if (entries < 10 || score > rs->score) {
-        echo(); 
-        curs_set(2);
+        echo(); // Show input
+        curs_set(2); // Show cursor
         char hs_msg[32];
         sprintf(hs_msg, "High Score: %d", score);
-        char msg[] = "Enter your name";
+        char prompt[] = "Enter your name";
         char name[11];
         wattron(hsw, COLOR_PAIR(1));
         mvwprintw(hsw, 0, 0, hs_msg);
         wattron(hsw, COLOR_PAIR(2));
-        mvwprintw(hsw, 2, 0, msg);
+        mvwprintw(hsw, 2, 0, prompt);
         wattroff(hsw, COLOR_PAIR);
         wmove(hsw, 3, 0);
-        wgetnstr(hsw, name, 10);
+        wgetnstr(hsw, name, 10); // Put input into name
         if (entries < 10) {
             append_high_score(table, name, score);
         } else {
@@ -109,12 +118,8 @@ int get_num_entries(const char* table) {
     sqlite3_stmt *count_res;
 
     // Open db connection
-    int rc = sqlite3_open("./assets/high_scores.db", &db);
-    if (rc != SQLITE_OK) {
-        fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(db)); 
-        sqlite3_close(db);
-        return -1;
-    }
+    int rc = sqlite3_open(DB_PATH, &db);
+    check_db(rc, db);
 
     // Create table if it doesn't exit 
     char table_sql[128];
@@ -148,12 +153,8 @@ void append_high_score(const char* table, const char* name, const int score) {
     sqlite3_stmt *res;
     
     // Open db connection
-    int rc = sqlite3_open("./assets/high_scores.db", &db);
-    if (rc != SQLITE_OK) {
-        fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(db)); 
-        sqlite3_close(db);
-        return;
-    }
+    int rc = sqlite3_open(DB_PATH, &db);
+    check_db(rc, db);
     
     // Insert values into table
     char sql[128];
@@ -191,12 +192,8 @@ void update_high_score(const char* table, const int lowrow, const char* name, co
     sqlite3_stmt *res;
     
     // Open db connection
-    int rc = sqlite3_open("./assets/high_scores.db", &db);
-    if (rc != SQLITE_OK) {
-        fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(db)); 
-        sqlite3_close(db);
-        return;
-    }
+    int rc = sqlite3_open(DB_PATH, &db);
+    check_db(rc, db);
 
     // Update lowest value in table 
     char sql[128];
@@ -239,12 +236,8 @@ struct rowscore* get_min_row_and_score(const char* table) {
     sqlite3_stmt *res;
     
     // Open db connection
-    int rc = sqlite3_open("./assets/high_scores.db", &db);
-    if (rc != SQLITE_OK) {
-        fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(db)); 
-        sqlite3_close(db);
-        return NULL;
-    }
+    int rc = sqlite3_open(DB_PATH, &db);
+    check_db(rc, db);
 
     // Get lowest score and its rowid
     char sql[128];
