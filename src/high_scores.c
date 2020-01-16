@@ -26,6 +26,7 @@ void check_db(int rc, sqlite3 *db) {
 }
 
 void show_high_scores(WINDOW* hsw, WINDOW* dummy, const char* size, const char* speed) {
+    wattron(hsw, A_BOLD);
     char table[32];
     char title[32];
     wattron(hsw, COLOR_PAIR(1));
@@ -81,6 +82,7 @@ void show_high_scores(WINDOW* hsw, WINDOW* dummy, const char* size, const char* 
 }
 
 void add_high_score(WINDOW* hsw, int score, const char* size, const char* speed) {
+    wattron(hsw, A_BOLD);
     char table[32];
     sprintf(table, "%s%s", speed, size);
     int entries = get_num_entries(table);
@@ -99,6 +101,7 @@ void add_high_score(WINDOW* hsw, int score, const char* size, const char* speed)
         wattron(hsw, COLOR_PAIR(2));
         mvwprintw(hsw, 2, 0, prompt);
         wattroff(hsw, COLOR_PAIR);
+        wattron(hsw, A_BOLD);
         wmove(hsw, 3, 0);
         wgetnstr(hsw, name, 10); // Put input into name
         if (entries < 10) {

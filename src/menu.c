@@ -42,6 +42,7 @@ const char* optiontext[] = {
 const char* eraseoption = "          ";
 
 void draw_cursor (wloc* ma, struct cursor c) {
+     attron(A_BOLD);
      c.option % 2 ? attron(COLOR_PAIR(2)) : attron(COLOR_PAIR(1));
      mvaddstr(ma->y + c.option * 2, ma->x - c.textlen - 1, c.text);
      mvaddstr(ma->y + c.option * 2 - (c.option > 0 ? 2 : -2), ma->x - c.textlen - 1, c.blank);
@@ -51,6 +52,7 @@ void draw_cursor (wloc* ma, struct cursor c) {
 }
 
 void draw_option (wloc* ma, enum option op, int speedchoice, int sizechoice) {
+     attron(A_BOLD);
      mvaddstr(ma->y + op * 2, ma->x + strlen(optiontext[op]) + 1, eraseoption);
      if (op == speed) {
         attron(COLOR_PAIR(1));
