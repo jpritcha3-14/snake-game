@@ -10,7 +10,7 @@
 
 enum option {start, speed, size, score, quit};
 enum size {small, med, large};
-const loc sizes[] = {{10, 25}, {15, 50}, {20, 75}};
+const loc sizes[] = {{10, 25}, {15, 51}, {20, 75}};
 
 struct cursor {
     char* text;
@@ -101,21 +101,16 @@ enum option get_max_size() {
     }
 }
 
+// Return game area subwindow centered in terminal
 WINDOW* getgamewindow(enum size sz) {
     int rows, cols;
     int row, col;
     getmaxyx(stdscr, rows, cols);
-        row = rows / 2 - (sizes[sz].row / 2);
-        row = row <= 0 ? 1 : row;
-        col = cols / 2 - (sizes[sz].col / 2);
-        col = col < 0 ? 0 : col;
-    if (sz == small) {
-        return subwin(stdscr, 10, 25, row, col);
-    } else if (sz == med) {
-        return subwin(stdscr, 15, 50, row, col);
-    } else {
-        return subwin(stdscr, 20, 75, row, col);
-    }
+    row = rows / 2 - (sizes[sz].row / 2);
+    row = row <= 0 ? 1 : row;
+    col = cols / 2 - (sizes[sz].col / 2);
+    col = col < 0 ? 0 : col;
+    return subwin(stdscr, sizes[sz].row, sizes[sz].col, row, col);
 }
 
 WINDOW* getscorewindow(WINDOW* pw) {
