@@ -13,7 +13,7 @@ To place make the binary available to all users:
 sudo make
 ```
 
-To place the binary in the current snake-game directory:
+To the binary in the current snake-game directory:
 ```
 make here
 ```
