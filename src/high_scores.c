@@ -4,7 +4,11 @@
 #include <ncurses.h>
 #include <sqlite3.h>
 
-const char DB_PATH[] = "./assets/high_scores.db";
+#if defined(ABSPATH)
+  const char DBPATH[] = "/usr/local/share/snake-game/assets/high_scores.db";
+#else
+  const char DBPATH[] = "./assets/high_scores.db";
+#endif
 
 struct rowscore {
     int row;
@@ -44,7 +48,7 @@ void show_high_scores(WINDOW* hsw, WINDOW* dummy, const char* size, const char* 
     int row = 3;
 
     // Open db connection
-    int rc = sqlite3_open(DB_PATH, &db);
+    int rc = sqlite3_open(DBPATH, &db);
     check_db(rc, db);
     
     // Create table if it doesn't exit 
@@ -121,7 +125,7 @@ int get_num_entries(const char* table) {
     sqlite3_stmt *count_res;
 
     // Open db connection
-    int rc = sqlite3_open(DB_PATH, &db);
+    int rc = sqlite3_open(DBPATH, &db);
     check_db(rc, db);
 
     // Create table if it doesn't exit 
@@ -156,7 +160,7 @@ void append_high_score(const char* table, const char* name, const int score) {
     sqlite3_stmt *res;
     
     // Open db connection
-    int rc = sqlite3_open(DB_PATH, &db);
+    int rc = sqlite3_open(DBPATH, &db);
     check_db(rc, db);
     
     // Insert values into table
@@ -195,7 +199,7 @@ void update_high_score(const char* table, const int lowrow, const char* name, co
     sqlite3_stmt *res;
     
     // Open db connection
-    int rc = sqlite3_open(DB_PATH, &db);
+    int rc = sqlite3_open(DBPATH, &db);
     check_db(rc, db);
 
     // Update lowest value in table 
@@ -239,7 +243,7 @@ struct rowscore* get_min_row_and_score(const char* table) {
     sqlite3_stmt *res;
     
     // Open db connection
-    int rc = sqlite3_open(DB_PATH, &db);
+    int rc = sqlite3_open(DBPATH, &db);
     check_db(rc, db);
 
     // Get lowest score and its rowid

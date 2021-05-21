@@ -11,6 +11,11 @@
 enum option {start, speed, size, score, quit};
 enum size {small, med, large};
 const loc sizes[] = {{10, 25}, {15, 51}, {20, 75}};
+#if defined(ABSPATH)
+  const char LOGOPATH[] = "/usr/local/share/snake-game/assets/logo.txt";
+#else
+  const char LOGOPATH[] = "./assets/logo.txt";
+#endif
 
 struct cursor {
     char* text;
@@ -72,7 +77,7 @@ void draw_logo(wloc* la) {
         FILE* fp;
         char buff[255];
 
-        fp = fopen("./assets/logo.txt", "r");
+        fp = fopen(LOGOPATH, "r");
         int i = la->y;
         while (fgets(buff, 255, fp)) {
             mvaddstr(i++, la->x, buff);

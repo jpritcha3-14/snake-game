@@ -21,7 +21,7 @@ int play_game(WINDOW* pa, WINDOW* sa, WINDOW* dummy, enum speed s) {
     char ch = 'd';
     char key;
     char prevkey;
-    char nextkey = ERR;
+    char nextkey = (char) ERR;
     char nxt;
     char scorebuffer[6];
     struct node* tempfrontbody;
@@ -81,26 +81,26 @@ int play_game(WINDOW* pa, WINDOW* sa, WINDOW* dummy, enum speed s) {
         // use the second to last in the current iteration, and
         // the last ('nextkey') in the next iteration. This allows
         // for fast inputs on tight turns to be processed correctly.
-        prevkey = ERR;
-        key = ERR;
-        if (nextkey != ERR) {
+        prevkey = (char) ERR;
+        key = (char) ERR;
+        if (nextkey != (char) ERR) {
             ch = nextkey;
-            nextkey = ERR;
+            nextkey = (char) ERR;
             fflush(stdin); // clear buffer 
-            //can also be implemented as: while (wgetch(dummy) != ERR);
+            //can also be implemented as: while (wgetch(dummy) != (char) ERR);
         } else {
             do {
                 prevkey = key;
                 key = nxt;
                 nxt = wgetch(dummy);
-            } while (nxt != ERR);
+            } while (nxt != (char) ERR);
     
-            if (key != ERR && prevkey != ERR && key != prevkey
+            if (key != (char) ERR && prevkey != (char) ERR && key != prevkey
                 && (prevkey == 'a' || prevkey == 'w' || prevkey == 'd' || prevkey == 's') 
                 && (key == 'a' || key == 'w' || key == 'd' || key == 's')) {
                 ch = prevkey;
                 nextkey = key; 
-            } else if (key != ERR
+            } else if (key != (char) ERR
                 && (key == 'a' || key == 'w' || key == 'd' || key == 's')) {
                 ch = key;
             }

@@ -6,9 +6,27 @@ The [classic game](https://en.wikipedia.org/wiki/Snake_(video_game_genre)) imple
 ## Install
 The game requires ncurses and sqlite3 which are available on most any Unix-like system.  To install them on a Debian based distro use: ```sudo apt-get install libncurses5-dev libncursesw5-dev sqlite3 libsqlite3-dev```
 
-Then use the makefile to compile, or use gcc directly:
-  
-```gcc -Wall -Iheaders src/game_loop.c src/helper_functions.c src/main.c src/menu.c src/high_scores.c -o snake -lncurses -lsqlite3```
+Then use the makefile to compile:
+
+To place make the binary available to all users:
+```
+sudo make
+```
+
+To place the binary in the current snake-game directory:
+```
+make here
+```
+
+## Uninstall
+```
+sudo make clean
+```
+or
+
+```
+make clean-here
+```
 
 ## Controls
 #### Menu
