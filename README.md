@@ -8,12 +8,12 @@ The game requires ncurses and sqlite3 which are available on most any Unix-like 
 
 Then use the makefile to compile:
 
-To place make the binary available to all users:
+To make the binary available to all users:
 ```
 sudo make
 ```
 
-To the binary in the current snake-game directory:
+To place the binary in the current snake-game directory:
 ```
 make here
 ```
