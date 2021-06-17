@@ -1,10 +1,18 @@
 #include <ncurses.h>
 #include <stdlib.h>
+#include <sys/stat.h>
 
 #include "structs.h"
 #include "helper_functions.h"
 #include "game_loop.h"
+#include "high_scores.h"
 #include "menu.h"
+
+#if defined(ABSPATH)
+  const char DBPATH1[] = "/usr/local/share/snake-game/assets/high_scores.db";
+#else
+  const char DBPATH1[] = "./assets/high_scores.db";
+#endif
 
 int main() {
     initscr();
@@ -16,6 +24,11 @@ int main() {
     curs_set(0);
     init_pair(1, COLOR_GREEN, COLOR_BLACK);
     init_pair(2, COLOR_RED, COLOR_BLACK);
+
+    // Create table and change permissions
+    const char hs[] = "high_scores.db";
+    create_db(hs);
+    chmod(DBPATH1, 0666);
 
     wloc* la = get_logo_area(stdscr);
     wloc* ma = get_menu_area(stdscr, la);

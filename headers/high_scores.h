@@ -4,5 +4,6 @@
 
 void show_high_scores(WINDOW* hsw, WINDOW* dummy, const char* size, const char* speed);
 void add_high_score(WINDOW* hsw, int score, const char* size, const char* speed);
+void create_db(const char* table);
 
 #endif

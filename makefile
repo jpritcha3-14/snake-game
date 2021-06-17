@@ -1,12 +1,13 @@
-snake : src/game_loop.c src/helper_functions.c src/main.c src/menu.c src/high_scores.c
-	mkdir -p /usr/local/share/snake-game/assets
-	cp ./assets/logo.txt /usr/local/share/snake-game/assets
-	gcc -std=gnu11 -DABSPATH="TRUE" -Wall -Iheaders src/game_loop.c src/helper_functions.c src/main.c src/menu.c src/high_scores.c -o /usr/local/bin/snake -lncurses -lsqlite3
-	chmod -R o+rw /usr/local/share/snake-game/assets
-	chmod o+x /usr/local/bin/snake
+snakegame : src/game_loop.c src/helper_functions.c src/main.c src/menu.c src/high_scores.c
+	mkdir -p build/assets
+	gcc -std=gnu11 -DABSPATH="TRUE" -Wall -Iheaders src/game_loop.c src/helper_functions.c src/main.c src/menu.c src/high_scores.c -o build/snake -lncurses -lsqlite3
+	chmod go+x build/snake
+	cp assets/logo.txt build/assets
 
-here : src/game_loop.c src/helper_functions.c src/main.c src/menu.c src/high_scores.c
-	gcc -std=gnu11 -Wall -Iheaders src/game_loop.c src/helper_functions.c src/main.c src/menu.c src/high_scores.c -o snake -lncurses -lsqlite3
+install: build/snake build/assets
+	mkdir -p /usr/local/share/snake-game
+	cp -pr build/assets /usr/local/share/snake-game
+	cp -p build/snake /usr/local/bin
 
 snaketest : src/game_loop.c src/helper_functions.c src/main.c src/menu.c src/high_scores.c
 	gcc -std=gnu11 -ggdb -Wall -Iheaders src/game_loop.c src/helper_functions.c src/main.c src/menu.c src/high_scores.c -o snaketest -lncurses -lsqlite3
@@ -18,6 +19,6 @@ clean :
 	rm -rf /usr/local/share/snake-game
 	rm /usr/local/bin/snake
 
-clean-here :
-	rm snake
+clean-test :
+	rm snaketest
 	rm assets/high_scores.db
