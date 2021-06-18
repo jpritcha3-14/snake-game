@@ -8,10 +8,10 @@
 #include "high_scores.h"
 #include "menu.h"
 
-#if defined(ABSPATH)
-  const char DBPATH1[] = "/usr/local/share/snake-game/assets/high_scores.db";
+#if !defined(HSPATH)
+const char DBPATH[] = "/usr/local/share/snake-game/assets/high_scores.db";
 #else
-  const char DBPATH1[] = "./assets/high_scores.db";
+const char DBPATH[] = HSPATH;
 #endif
 
 int main() {
@@ -28,7 +28,7 @@ int main() {
     // Create table and change permissions
     const char hs[] = "high_scores.db";
     create_db(hs);
-    chmod(DBPATH1, 0666);
+    chmod(DBPATH, 0666);
 
     wloc* la = get_logo_area(stdscr);
     wloc* ma = get_menu_area(stdscr, la);

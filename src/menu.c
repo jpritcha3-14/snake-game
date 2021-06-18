@@ -11,10 +11,10 @@
 enum option {start, speed, size, score, quit};
 enum size {small, med, large};
 const loc sizes[] = {{10, 25}, {15, 51}, {20, 75}};
-#if defined(ABSPATH)
+#if !defined(LGPATH)
   const char LOGOPATH[] = "/usr/local/share/snake-game/assets/logo.txt";
 #else
-  const char LOGOPATH[] = "./assets/logo.txt";
+  const char LOGOPATH[] = LGPATH;
 #endif
 
 struct cursor {

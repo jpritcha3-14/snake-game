@@ -4,11 +4,7 @@
 #include <ncurses.h>
 #include <sqlite3.h>
 
-#if defined(ABSPATH)
-  const char DBPATH[] = "/usr/local/share/snake-game/assets/high_scores.db";
-#else
-  const char DBPATH[] = "./assets/high_scores.db";
-#endif
+extern const char DBPATH[];
 
 struct rowscore {
     int row;

@@ -1,6 +1,6 @@
 snakegame : src/game_loop.c src/helper_functions.c src/main.c src/menu.c src/high_scores.c
 	mkdir -p build/assets
-	gcc -std=gnu11 -DABSPATH="TRUE" -Wall -Iheaders src/game_loop.c src/helper_functions.c src/main.c src/menu.c src/high_scores.c -o build/snake -lncurses -lsqlite3
+	gcc -std=gnu11 -Wall -Iheaders src/game_loop.c src/helper_functions.c src/main.c src/menu.c src/high_scores.c -o build/snake -lncurses -lsqlite3
 	chmod go+x build/snake
 	cp assets/logo.txt build/assets
 
