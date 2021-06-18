@@ -12,38 +12,26 @@ struct rowscore {
 };
 
 void check_db(int rc, sqlite3 *db);
-void create_db(const char* table);
+void create_db(const char* filename);
 int get_num_entries(const char* table);
 void append_high_score(const char* table, const char* name, const int score); 
 void update_high_score(const char* table, const int, const char* name, const int score); 
 struct rowscore* get_min_row_and_score(const char* table);
 
 void check_db(int rc, sqlite3 *db) {
-    if (rc != SQLITE_OK) {
-        fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(db)); 
-        sqlite3_close(db);
-        exit(1);
-    }
+	if (rc != SQLITE_OK) {
+		fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(db));
+		sqlite3_close(db);
+	}
 }
 
-void create_db(const char* table) {
-    sqlite3 *db;
-    sqlite3_stmt *table_res;
-
+void create_db(const char* filename) {
     // Open db connection
+    sqlite3 *db;
     int rc = sqlite3_open(DBPATH, &db);
     check_db(rc, db);
+    sqlite3_close(db);
 
-    // Create table if it doesn't exit
-    char table_sql[128];
-    sprintf(table_sql, "CREATE TABLE IF NOT EXISTS %s(name TEXT, score INTEGER);", table);
-    rc = sqlite3_prepare_v2(db, table_sql, -1, &table_res, 0);
-    if (rc != SQLITE_OK) {
-        fprintf(stderr, "Failed to create %s table: %s\n", table, sqlite3_errmsg(db));
-        return;
-    }
-    sqlite3_step(table_res);
-    sqlite3_finalize(table_res);
 }
 
 void show_high_scores(WINDOW* hsw, WINDOW* dummy, const char* size, const char* speed) {
@@ -178,6 +166,7 @@ void append_high_score(const char* table, const char* name, const int score) {
     
     // Open db connection
     int rc = sqlite3_open(DBPATH, &db);
+    if (rc != SQLITE_OK) exit(1);
     check_db(rc, db);
     
     // Insert values into table

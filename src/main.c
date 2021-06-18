@@ -26,8 +26,7 @@ int main() {
     init_pair(2, COLOR_RED, COLOR_BLACK);
 
     // Create table and change permissions
-    const char hs[] = "high_scores.db";
-    create_db(hs);
+    create_db(DBPATH);
     chmod(DBPATH, 0666);
 
     wloc* la = get_logo_area(stdscr);
